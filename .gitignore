@@ -1,0 +1,4 @@
+/node_modules/
+/docker/.docker
+/docker/master-data
+/docker/slave-data

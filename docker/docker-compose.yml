@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: mdb
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    volumes:
+      - .docker/data/mongodb:/data/db
+
+  redis:
+    image: redis:latest
+    container_name: rdb
+    ports:
+      - 6379:6379
+    volumes:
+      - .docker/data/redis:/data
+    restart: unless-stopped
