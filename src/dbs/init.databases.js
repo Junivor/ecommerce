@@ -1,4 +1,4 @@
-import DatabaseValidator from "../validator/database.validator.js";
+import DatabaseValidator from "../validators/database.validator.js";
 import InitMongo from "./init.mongo.js";
 import InitMysql from "./init.mysql.js";
 import InitIoredis from "./init.ioredis.js";
@@ -27,7 +27,19 @@ export default class Databases {
             .isExist()
             .getLowerCaseString()
 
-        return Databases.databases[lowerCaseName]
+        return new Databases.databases[lowerCaseName]
+    }
+
+    static getClientFromMongo(clientName = "") {
+        return this.getDatabase("mongo").getClient(clientName)
+    }
+
+    static getClientFromRedis(clientName = "") {
+        return this.getDatabase("redis").getClient(clientName)
+    }
+
+    static getClientFromMysql(clientName = "") {
+        return this.getDatabase("mysql").getClient(clientName)
     }
 
     static printDatabasesStatus() {
@@ -42,8 +54,8 @@ export default class Databases {
 
 
 
-Databases.registerDatabase("mongo", new InitMongo())
-Databases.registerDatabase("mysql", new InitMysql())
-Databases.registerDatabase("redis", new InitIoredis())
+Databases.registerDatabase("mongo", InitMongo)
+Databases.registerDatabase("mysql", InitMysql)
+Databases.registerDatabase("redis", InitIoredis)
 
 

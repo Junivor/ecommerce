@@ -35,6 +35,9 @@ export default class Mongo extends Init{
     setClientStatus(clientName, status) {
         return super.setClientStatus(clientName, status);
     }
+    setRetryClient(clientName) {
+        super.setRetryClient(clientName);
+    }
 
     getInstance() {
         return super.getInstance();
@@ -48,14 +51,21 @@ export default class Mongo extends Init{
     getClientsName() {
         return super.getClientsName();
     }
+    getClientURI(clientName = "") {
+        return super.getClientURI(clientName);
+    }
+    getRetryClient(clientName) {
+        return super.getRetryClient(clientName);
+    }
 
     connect(clientName = "", uri) {
         const lowerCaseName = super.connect(clientName, uri)
         const client = mongoose.createConnection(uri)
 
-        this.handleEventConnect(lowerCaseName, client)
         this.setClient(lowerCaseName, client)
+        this.setRetryClient(lowerCaseName)
         this.setClientStatus(lowerCaseName, this.CONNECT_STATUS.CONNECTED)
+        this.handleEventConnect(lowerCaseName, client)
         return this
     }
     connectAll() {
@@ -70,6 +80,9 @@ export default class Mongo extends Init{
         this.getAllClientStatus()
         return this
     }
+    async retry(clientName, retryTime = 3, delay) {
+        await super.retry(clientName, retryTime);
+    }
 
     handleEventConnect(clientName = "", client = {}) {
         super.handleEventConnect(clientName, client)
@@ -82,6 +95,6 @@ export default class Mongo extends Init{
     }
 }
 
-Mongo.registerURI("local", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_FIRST}`)
-Mongo.registerURI("clone", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_SECOND}`)
+Mongo.registerURI("local", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_LOCAL}`)
+Mongo.registerURI("clone", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_CLONE}`)
 

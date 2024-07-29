@@ -32,6 +32,9 @@ export default class Ioredis extends Init {
     setClientStatus(clientName, status) {
         return super.setClientStatus(clientName, status);
     }
+    setRetryClient(clientName) {
+        super.setRetryClient(clientName);
+    }
 
     getInstance() {
         return super.getInstance();
@@ -48,11 +51,11 @@ export default class Ioredis extends Init {
 
     connect(clientName = "", uri) {
         const lowerCaseName = super.connect(clientName, uri)
-        const client = new Redis(uri)
+        const client = new Redis(uri, {retryStrategy: null})
 
-        this.handleEventConnect(lowerCaseName, client)
         this.setClient(lowerCaseName, client)
-        this.setClientStatus(lowerCaseName, this.CONNECT_STATUS.CONNECTED)
+        this.setRetryClient(clientName)
+        this.handleEventConnect(lowerCaseName, client)
         return this
     }
     connectAll() {
@@ -66,6 +69,9 @@ export default class Ioredis extends Init {
         client.quit().then()
         this.getAllClientStatus()
         return this
+    }
+    async retry(clientName, retryTime = 3, delay, error) {
+        await super.retry(clientName, retryTime, delay, error)
     }
 
     handleEventConnect(clientName = "", client = {}) {
@@ -82,4 +88,5 @@ export default class Ioredis extends Init {
 
 Ioredis.registerURI("redis_zero", `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/${process.env.REDIS_DB_ZERO}`)
 Ioredis.registerURI("redis_one", `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/${process.env.REDIS_DB_ONE}`)
+Ioredis.registerURI("redis2_one", `redis://${process.env.REDIS_HOST}:6380/${process.env.REDIS_DB_ONE}`)
 

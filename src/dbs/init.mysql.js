@@ -1,15 +1,22 @@
-import * as mysql from "mysql2"
+import {Sequelize} from 'sequelize';
 import Init from "./init.js";
+import {ConnectionString} from "connection-string";
 
 console.log("INIT MYSQL")
 
 export default class Mysql extends Init {
     static URIs = {}
-    static registerURI(clientName = "", uri) {
-        if (this.URIs[clientName])
-            throw new Error("Existed")
-        this.URIs[clientName] = uri
-        return this.URIs
+    static registerURI(type = "", clientName = "", uri) {
+        if (!this.URIs[type]) {
+            this.URIs[type] = {}; // Initialize the type if it doesn't exist
+        }
+
+        if (this.URIs[type][clientName]) {
+            throw new Error("Existed");
+        }
+
+        this.URIs[type][clientName] = uri;
+        return this.URIs;
     }
 
 
@@ -26,8 +33,12 @@ export default class Mysql extends Init {
         })
     }
 
+    ping() {
+        console.log("pong")
+    }
+
     setClient(clientName, client) {
-        super.setClient(clientName, client);
+        return super.setClient(clientName, client);
     }
     setClientStatus(clientName, status) {
         return super.setClientStatus(clientName, status);
@@ -46,18 +57,48 @@ export default class Mysql extends Init {
         return super.getClientsName();
     }
 
-    connect(clientName = "", uri) {
-        const lowerCaseName = super.connect(clientName, uri)
-        const client = mysql.createConnection(uri)
+    connect(clientName ) {
+        const write = new ConnectionString(Mysql.URIs["write"]["master"])
+        const read = Object.values(Mysql.URIs["read"]).map(uri => {
+            const converted = new ConnectionString(uri)
+            return {
+                username: converted.user,
+                password: converted.password,
+                host: converted.hostname,
+                port: converted.port,
+                database: converted.path[0],
+            }
+        })
 
-        this.handleEventConnect(lowerCaseName, client)
-        this.setClient(lowerCaseName, client)
-        this.setClientStatus(lowerCaseName, this.CONNECT_STATUS.CONNECTED)
-        return this
+        const client = new Sequelize(null, null, null, {
+            dialect: "mysql",
+            replication: {
+              write: {
+                  username: write.user,
+                  password: write.password,
+                  host: write.hostname,
+                  port: write.port,
+                  database: write.path[0],
+              },
+              read
+            },
+            pool: {
+                max: 5,
+                idle: 10000,
+            },
+            retry: 5,
+            define: {
+                timestamps: false,
+            }
+        })
+
+        this.setClient(clientName, client)
+        this.validator.setString(clientName).setObject(client)
+        this.handleEventConnect(clientName, client)
+
     }
     connectAll() {
-        super.connectAll()
-        return this
+        return this.connect("shop")
     }
     disconnect(clientName = "") {
         const lowerCaseName = super.disconnect(clientName);
@@ -67,12 +108,33 @@ export default class Mysql extends Init {
         this.getAllClientStatus()
         return this
     }
-
-    handleEventConnect(clientName = "", client = {}) {
-        super.handleEventConnect(clientName, client)
+    async retry(clientName, retryTime = 3, delay, error) {
+        await super.retry(clientName, retryTime, delay, error)
     }
-    handleTimeoutError() {
-        super.handleTimeoutError();
+
+
+    handleEventConnect(clientName, client = {}) {
+        const MAX_RETRY = this.getMaximumRetry()
+        const RETRY_PER_MS = this.getRetryPerMs()
+
+        client.authenticate()
+            .then(() => {
+                console.log("Mysql connected")
+                this.setRetryClient(clientName)
+                this.setSuccessRetry(clientName)
+                this.setClientStatus(clientName, this.CONNECT_STATUS.CONNECTED)
+            })
+            .catch(async (error) => {
+                const isClientRetrying = this.getRetryClientStatus(clientName)
+                if (isClientRetrying) return
+                this.setRetryClientStatus(clientName, true)
+                this.setClientStatus(clientName, this.CONNECT_STATUS.ERROR)
+
+                await this.retry(clientName, MAX_RETRY, RETRY_PER_MS, error)
+            })
+    }
+    handleTimeoutError(clientName, message) {
+        super.handleTimeoutError(clientName, message);
     }
 
     printClientStatusTable() {
@@ -81,8 +143,8 @@ export default class Mysql extends Init {
 }
 
 
-Mysql.registerURI("master", `mysql://${process.env.MYSQL_MASTER_NAME}:${process.env.MYSQL_MASTER_PASSWORD}@${process.env.MYSQL_MASTER_HOST}:${process.env.MYSQL_MASTER_PORT}/${process.env.MYSQL_MASTER_DATABASE}`)
-Mysql.registerURI("slave", `mysql://${process.env.MYSQL_SLAVE_NAME}:${process.env.MYSQL_SLAVE_PASSWORD}@${process.env.MYSQL_SLAVE_HOST}:${process.env.MYSQL_SLAVE_PORT}/${process.env.MYSQL_SLAVE_DATABASE}`)
+Mysql.registerURI("write", "master", `mysql://${process.env.MYSQL_MASTER_USERNAME}:${process.env.MYSQL_MASTER_PASSWORD}@${process.env.MYSQL_MASTER_HOST}:${process.env.MYSQL_MASTER_PORT}/${process.env.MYSQL_MASTER_DATABASE}`)
+Mysql.registerURI("read", "slave_1", `mysql://${process.env.MYSQL_SLAVE_USERNAME}:${process.env.MYSQL_SLAVE_PASSWORD}@${process.env.MYSQL_SLAVE_HOST}:${process.env.MYSQL_SLAVE_PORT}/${process.env.MYSQL_SLAVE_DATABASE}`)
 
 
 

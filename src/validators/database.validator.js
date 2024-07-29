@@ -11,8 +11,13 @@ export default class DatabaseValidator {
         this.lowerCaseString = ""
     }
 
+    isStringEmpty() {
+        if (!this.lowerCaseString) throw new Error("String cant be empty")
+    }
     isParamEmpty(...params) {
-        if (!params.every(Boolean)) throw new Error("Some params are empty, check again")
+        // console.log("isParamEmpty::::", params)
+        if (!params.every(Boolean))
+            throw new Error("Some params are empty, check again")
         return this
     }
     isEmpty() {
@@ -29,7 +34,8 @@ export default class DatabaseValidator {
         return this
     }
     isExist() {
-        const object = this.getObject()
+        const lowerCaseString = this.getLowerCaseString()
+        const object = this.getObject(lowerCaseString)
 
         if (Boolean(object)) return this
         else throw new Error(`${this.title} is not exist`)
@@ -45,7 +51,12 @@ export default class DatabaseValidator {
         return this.objects
     }
     setObject(object) {
-        this.objects = object
+        const lowerCaseString = this.getLowerCaseString()
+        this.objects[lowerCaseString] = object
+        return this
+    }
+    setObjects(objects) {
+        this.objects = objects
         return this
     }
 
@@ -53,6 +64,7 @@ export default class DatabaseValidator {
         return this.normalString
     }
     getLowerCaseString() {
+        this.isStringEmpty()
         return this.lowerCaseString
     }
     setTitle(string) {

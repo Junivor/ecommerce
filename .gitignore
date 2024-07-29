@@ -2,3 +2,6 @@
 /docker/.docker
 /docker/master-data
 /docker/slave-data
+/.env
+/package.json
+/package-lock.json
