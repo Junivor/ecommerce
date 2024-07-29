@@ -1,0 +1,11 @@
+### CREATE new user
+POST http://localhost:3030/api/v1/account
+Content-Type: application/json
+
+{
+  "username": "khang",
+  "email": "hello@khang.com",
+  "password": "123456"
+}
+
+###
