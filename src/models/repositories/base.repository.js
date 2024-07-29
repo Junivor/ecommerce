@@ -1,5 +1,3 @@
-import generateRandomId from "../../utils/generateRandomId.js";
-
 export default class BaseRepository {
     constructor(model) {
         this.model = model
