@@ -1,6 +1,6 @@
 import Databases from "../dbs/init.databases.js";
 import {DataTypes, Model} from "sequelize";
-import generateRandomId from "../utils/generateRandomId.js";
+import {generateRandomNumber} from "../utils/utils.js";
 
 const sequelize = Databases.getClientFromMysql("shop")
 
@@ -9,9 +9,9 @@ export default class Account extends Model {}
 
 Account.init({
     id: {
-        type: DataTypes.STRING,
-        allowNull: false,
-        primaryKey: true
+        type: DataTypes.UUID,
+        primaryKey: true,
+        defaultValue: DataTypes.UUIDV4
     },
     email: {
         type: DataTypes.STRING,
@@ -22,6 +22,7 @@ Account.init({
         type: DataTypes.STRING,
         unique: true,
         allowNull: false,
+        defaultValue: `user-${generateRandomNumber()}`
     },
     password: {
         type: DataTypes.STRING,
@@ -40,6 +41,4 @@ Account.init({
 }).sync({alter: true})
     .then().catch(console.error)
 
-Account.beforeValidate((profile, options) => {
-    profile.id = generateRandomId(16)
-})
+// Account.hasOne(Profile, {foreignKey: "account_id", onDelete: "CASCADE"})

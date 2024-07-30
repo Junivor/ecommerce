@@ -7,8 +7,7 @@ export default class Profile extends Model{}
 
 Profile.init({
     account_id: {
-        type: DataTypes.STRING,
-        allowNull: false,
+        type: DataTypes.UUID,
         references: {
             model: Account,
             key: "id"
@@ -21,7 +20,7 @@ Profile.init({
     },
     profile_picture: {
         type: DataTypes.STRING,
-        defaultValue: "user-example.jpg"
+        defaultValue: "account-example.jpg"
     },
     phone_number: {
         type: DataTypes.BIGINT,
@@ -40,3 +39,4 @@ Profile.init({
 }).sync({ alter: true })
     .then().catch(console.error)
 
+Profile.belongsTo(Account, {foreignKey: "account_id"})

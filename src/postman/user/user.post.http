@@ -3,9 +3,25 @@ POST http://localhost:3030/api/v1/account
 Content-Type: application/json
 
 {
-  "username": "khang",
-  "email": "hello@khang.com",
+  "email": "hello@khoi.com",
   "password": "123456"
 }
 
-###
+
+### DELETE a user
+POST http://localhost:3030/api/v1/account/delete
+Content-Type: application/json
+
+{
+  "username": "khoi"
+}
+
+### UPDATE a user
+POST http://localhost:3030/api/v1/account/update
+Content-Type: application/json
+
+{
+  "username": "user-1722310898521",
+  "update_username": "khoi",
+  "update_email": "kucantscute@gmail.com"
+}

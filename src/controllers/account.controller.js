@@ -1,16 +1,31 @@
 import AccountService from "../services/account.service.js";
+import {CreatedResponse, OKResponse} from "../core/success.response.js";
+import {request} from "express";
 
 export default class AccountController {
+    static service = "Account"
     static async find(req, res, next) {
-        const data = await AccountService.find()
-        return res.status(200).json(data)
-    }
-    static async findByEmail(req, res, next) {
-        const data = await AccountService.findByEmail(req.body.email)
-        return res.status(200).json(data)
+        new OKResponse({
+            service: AccountController.service,
+            metadata: await AccountService.find()
+        }).send(res)
     }
     static async create(req, res, next) {
-        const data = await AccountService.create(req.body)
-        return res.status(200).json(data)
+        new CreatedResponse({
+            service: AccountController.service,
+            metadata: await AccountService.createAccount(req.body)
+        }).send(res)
+    }
+    static async remove(req, res, next) {
+        new OKResponse({
+            service: AccountController.service,
+            metadata: await AccountService.removeAccount(req.body)
+        }).send(res)
+    }
+    static async update(req, res, next) {
+        return new OKResponse({
+            service: AccountController.service,
+            metadata: await AccountService.updateAccount(req.body)
+        }).send(res)
     }
 }
