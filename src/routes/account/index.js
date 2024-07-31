@@ -4,7 +4,7 @@ import catchAsync from "../../helpers/catchAsync.js";
 
 const accountRoute = express.Router()
 
-accountRoute.get("/all", catchAsync(AccountController.find))
+accountRoute.get("/:username", catchAsync(AccountController.findOne))
 accountRoute.post("", catchAsync(AccountController.create))
 accountRoute.post("/delete", catchAsync(AccountController.remove))
 accountRoute.post("/update", catchAsync(AccountController.update))

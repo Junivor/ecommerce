@@ -21,7 +21,14 @@ POST http://localhost:3030/api/v1/account/update
 Content-Type: application/json
 
 {
-  "username": "user-1722310898521",
-  "update_username": "khoi",
-  "update_email": "kucantscute@gmail.com"
+  "username": "user-1722385917616",
+  "update": {
+    "account": {
+      "username": "koi04",
+      "email": "koi@gmail.com"
+    },
+    "profile": {
+      "profile_name": "Love coconut"
+    }
+  }
 }

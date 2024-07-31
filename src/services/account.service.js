@@ -1,10 +1,11 @@
-import AccountRepository from "../models/repositories/mysql/account.repository.js";
+import AccountRepository from "../models/repositories/account/account.repository.js";
 import AccountValidator from "../validators/account/account.validator.js";
-import {ConflictException} from "../core/error.response.js";
+import {BadRequestException} from "../core/error.response.js";
 import Databases from "../dbs/init.databases.js";
 import BaseService from "./base.service.js";
 import ProfileService from "./profile.service.js";
-import Account from "../models/account.model.js";
+
+import Profile from "../models/mysql/profile.model.js";
 
 const client = Databases.getClientFromMysql("shop")
 
@@ -16,54 +17,66 @@ export default new class AccountService extends BaseService {
     }
 
     async findAccount(request) {
-        return (await AccountValidator
-            .isRequestFieldEmpty(request)
-            .isNotFound(request))
-            .getModel()
+        await AccountValidator.setFields(request)
+            .validateRequestField()
+            .isNotFound()
+
+        return await AccountRepository.findAccountByUsername({
+            username: request.username,
+            include: Profile
+        })
     }
 
     async createAccount(request) {
-        await AccountValidator
-            .isRequestFieldEmpty(request)
-            .isDuplicate(request)
+        await AccountValidator.setFields(request)
+            .validateRequestField()
+            .isDuplicate()
 
-        return client.transaction(async transaction => {
+        return await client.transaction(async transaction => {
             try {
-                const createdAccount = await AccountRepository.create(request, transaction)
+                const createdAccount = await AccountRepository.createAccount(request, transaction)
 
                 await ProfileService.createProfile({
-                    account_id: createdAccount.id,
+                    account_id: createdAccount.account_id,
                     profile_name: createdAccount.username
                 }, transaction)
-
                 return createdAccount
             } catch(error) {
-                throw new ConflictException(error, this.serviceName)
+                throw new BadRequestException(error, this.constructor.name)
             }
         })
 
     }
-    async removeAccount(request) {
-        const accountModel = await this.findAccount(request)
-        return client.transaction(async transaction => {
-            const data = await ProfileService.destroyProfileById({
-                placeholderId: {
-                    account_id: accountModel.id
-                }, transaction
+    async deleteAccount(request) {
+
+        await AccountValidator.setFields(request)
+            .validateRequestField()
+            .isNotFound()
+
+        const validatedModel = AccountValidator.getModel()
+
+        return await client.transaction(async transaction => {
+            await ProfileService.deleteMultipleProfile({
+                account_id: validatedModel.account_id,
+                transaction
             })
-            await AccountRepository.destroyAccountById({
-                placeholderId: {
-                    id: accountModel.id
-                }, transaction
+            await AccountRepository.deleteAccountById({
+                account_id: validatedModel.account_id,
+                transaction
             })
-            return data
+            return "Successfully"
         })
     }
     async updateAccount(request) {
-        const accountModel = await this.findAccount(request)
-        const { username, ...rest } = request
-        return await AccountRepository.updateAccount({
-            model: accountModel, payload: rest
-        })
+        await AccountValidator
+            .setFields(request)
+            .validateRequestField()
+            .isNotFound()
+
+        const validatedModel = AccountValidator.getModel()
+        const validatedFields = AccountValidator.getFields()
+        const { account } = validatedFields.update
+
+        return await AccountRepository.updateAccount(validatedModel, account)
     }
 }

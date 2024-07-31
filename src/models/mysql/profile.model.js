@@ -1,6 +1,6 @@
 import {DataTypes, Model} from "sequelize";
+import Databases from "../../dbs/init.databases.js";
 import Account from "./account.model.js";
-import Databases from "../dbs/init.databases.js";
 const sequelize = Databases.getClientFromMysql("shop")
 
 export default class Profile extends Model{}
@@ -10,7 +10,7 @@ Profile.init({
         type: DataTypes.UUID,
         references: {
             model: Account,
-            key: "id"
+            key: "account_id"
         }
     },
     profile_name: {
@@ -23,7 +23,7 @@ Profile.init({
         defaultValue: "account-example.jpg"
     },
     phone_number: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.STRING,
         unique: true
     },
     verified: {
@@ -39,4 +39,3 @@ Profile.init({
 }).sync({ alter: true })
     .then().catch(console.error)
 
-Profile.belongsTo(Account, {foreignKey: "account_id"})

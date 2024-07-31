@@ -1,6 +1,6 @@
-import Databases from "../dbs/init.databases.js";
+import Databases from "../../dbs/init.databases.js";
 import {DataTypes, Model} from "sequelize";
-import {generateRandomNumber} from "../utils/utils.js";
+import {generateRandomNumber} from "../../utils/utils.js";
 
 const sequelize = Databases.getClientFromMysql("shop")
 
@@ -8,7 +8,7 @@ const sequelize = Databases.getClientFromMysql("shop")
 export default class Account extends Model {}
 
 Account.init({
-    id: {
+    account_id: {
         type: DataTypes.UUID,
         primaryKey: true,
         defaultValue: DataTypes.UUIDV4
@@ -41,4 +41,3 @@ Account.init({
 }).sync({alter: true})
     .then().catch(console.error)
 
-// Account.hasOne(Profile, {foreignKey: "account_id", onDelete: "CASCADE"})

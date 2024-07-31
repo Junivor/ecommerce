@@ -1,5 +1,5 @@
-### GET all user
-GET http://localhost:3030/api/v1/account/all
+### GET user by username
+GET http://localhost:3030/api/v1/account/koi04
 
 
 ### GET user by email
@@ -7,6 +7,6 @@ GET http://localhost:3030/api/v1/account
 Content-Type: application/json
 
 {
-  "email": "helloKoi@gmail.com"
+  "email": "koi@gmail.com"
 }
 

@@ -4,10 +4,10 @@ import {request} from "express";
 
 export default class AccountController {
     static service = "Account"
-    static async find(req, res, next) {
+    static async findOne(req, res, next) {
         new OKResponse({
             service: AccountController.service,
-            metadata: await AccountService.find()
+            metadata: await AccountService.findAccount(req.params)
         }).send(res)
     }
     static async create(req, res, next) {
@@ -19,7 +19,7 @@ export default class AccountController {
     static async remove(req, res, next) {
         new OKResponse({
             service: AccountController.service,
-            metadata: await AccountService.removeAccount(req.body)
+            metadata: await AccountService.deleteAccount(req.body)
         }).send(res)
     }
     static async update(req, res, next) {

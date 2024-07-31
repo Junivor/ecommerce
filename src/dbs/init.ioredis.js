@@ -53,6 +53,7 @@ export default class Ioredis extends Init {
         const lowerCaseName = super.connect(clientName, uri)
         const client = new Redis(uri, {retryStrategy: null})
 
+        this.validator.setString(clientName).setObject(client)
         this.setClient(lowerCaseName, client)
         this.setRetryClient(clientName)
         this.handleEventConnect(lowerCaseName, client)

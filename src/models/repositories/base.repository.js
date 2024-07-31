@@ -1,30 +1,48 @@
 import {where} from "sequelize";
 
 export default class BaseRepository {
-    constructor(model) {
-        this.model = model
+    constructor(Model) {
+        this.Model = Model
+        this.cachedModelData = null
     }
 
-    async all () {
-        return this.model.findAll()
+    createModel(payload, transaction = null) {
+        return !transaction
+            ? this.Model.create(payload)
+            : this.Model.create(payload, {transaction})
     }
-    async create(payload, transaction = null) {
-        return transaction
-            ? this.model.create(payload, {transaction})
-            : this.model.create(payload)
+    updateModel(Model, payload) {
+        for (const [key, value] of Object.entries(payload)) {
+            Model[key] = value
+        }
+
+        return Model.save()
     }
-    async destroyById({placeholderId, transaction}) {
-        return transaction
-            ? this.model.destroy({where: {...placeholderId}}, {transaction})
-            : this.model.delete({where: {...placeholderId}
+    findModel({ whereFields = {}, include } = {}) {
+        const foundModel = this.Model.findOne({
+            where: {...whereFields},
+            include
         })
+
+        this.setCacheModelData(foundModel)
+        return foundModel
     }
-    async updateModel({ model, payload }) {
-        const updaterModel = model
-        Object.keys(payload).forEach(key => {
-            const keyWithoutPrefix = key.split("update_")[1]
-            updaterModel[keyWithoutPrefix] = payload[key]
-        })
-        return await updaterModel.save()
+    deleteModel({ whereFields = {}, transaction = null } = {}) {
+        return this.Model.destroy({
+            where: {...whereFields}
+        }, transaction)
+    }
+    setCacheModelData(modelData) {
+        return this.cachedModelData = modelData
+    }
+    getCacheModelData() {
+        return this.cachedModelData
+    }
+
+    get(id) {
+
+    }
+    set(id) {
+
     }
 }

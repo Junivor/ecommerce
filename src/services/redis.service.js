@@ -8,10 +8,8 @@ export default new class RedisService extends Ioredis {
             EX: 5000, //ms
             PX: 5000, //secs
         }
-        this.KEYS = {
-            user: {},
-            prd: {}
-        }
+
+        this.USER_KEY_PERFIX = "usr"
     }
 
     setTTL(timestamp, value = 5000) {
@@ -22,7 +20,15 @@ export default new class RedisService extends Ioredis {
         return this.TTL[timestamp]
     }
 
-    async set(key = "", value = "") {
+    async setCache(key = "", value) {
+        await this.client.set(key, JSON.stringify(value))
+    }
 
+    async getCache(key = "") {
+        return JSON.parse(await this.client.get(key))
+    }
+
+    getUserKeyPrefix() {
+        return this.USER_KEY_PERFIX
     }
 }

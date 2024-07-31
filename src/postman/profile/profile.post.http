@@ -1,0 +1,27 @@
+### CREATE new profile
+POST http://localhost:3030/api/v1/profile
+Content-Type: application/json
+
+{
+  "account_id": "daa60b5b-f7de-4bd3-9d83-33e266018fa7",
+  "profile_name": "khoidz"
+}
+
+### DELETE a profile
+POST http://localhost:3030/api/v1/profile/delete
+Content-Type: application/json
+
+{
+  "profile_name": "khoidz"
+}
+
+### Update a profile
+POST http://localhost:3030/api/v1/profile/update
+Content-Type: application/json
+
+{
+  "profile_name": "khoidz",
+  "update": {
+    "profile_name": "cc"
+  }
+}

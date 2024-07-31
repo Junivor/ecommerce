@@ -1,32 +1,43 @@
 import BaseValidator from "../base.validator.js";
-import AccountRepository from "../../models/repositories/mysql/account.repository.js";
-import {BadRequestException} from "../../core/error.response.js";
+import AccountRepository from "../../models/repositories/account/account.repository.js";
+import {BadRequestException, NotFoundException} from "../../core/error.response.js";
 
 export default new class AccountValidator extends BaseValidator {
     constructor() {
-        super()
+        super();
     }
 
-    async isDuplicate(request) {
-        const foundAccount = await AccountRepository.findByEmail(request.email)
-        if (foundAccount) throw new BadRequestException("Duplicate account", this.serviceName)
+    async isDuplicate() {
+        const emailField = this.getField("email")
+        const accountModel = await AccountRepository.findAccountByEmail(emailField)
+
+        if (accountModel)
+            throw new BadRequestException("Duplicate email", this.serviceName)
+
         return this
     }
+    async isNotFound() {
+        //if there are no account -> throw error
+        const usernameField = this.getField("username")
 
-    async isNotFound(request) {
-        const foundAccount = await AccountRepository.findByUserName(request.username)
+        const accountModel = await AccountRepository.findAccountByUsername({
+            username: usernameField
+        })
 
-        if (!foundAccount)
-            throw new BadRequestException(`Request ${request.username} not found`, this.serviceName)
-        this.setModel(foundAccount)
+        if (!accountModel) throw new NotFoundException("Account not found", this.serviceName)
+
+        this.setModel(accountModel)
         return this
     }
-
-    setModel(model = {}) {
-        this.model = model
+    validateRequestField(request) {
+        super.validateRequestField(request);
+        return this
     }
-
-    getModel() {
-        return this.model
+    setFields(fields) {
+        super.setFields(fields);
+        return this
+    }
+    getField(name) {
+        return super.getField(name);
     }
 }
