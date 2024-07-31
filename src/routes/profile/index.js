@@ -1,5 +1,4 @@
 import express from "express";
-import AccountController from "../../controllers/account.controller.js";
 import catchAsync from "../../helpers/catchAsync.js";
 import ProfileController from "../../controllers/profile.controller.js";
 

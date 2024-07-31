@@ -1,6 +1,5 @@
 import BaseService from "./base.service.js";
 import ProfileRepository from "../models/repositories/profile/profile.repository.js";
-import profile from "../routes/profile/index.js";
 import ProfileValidator from "../validators/profile/profile.validator.js";
 import ProfileCache from "../models/repositories/profile/profile.cache.js";
 

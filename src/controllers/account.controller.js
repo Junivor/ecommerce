@@ -1,6 +1,5 @@
 import AccountService from "../services/account.service.js";
 import {CreatedResponse, OKResponse} from "../core/success.response.js";
-import {request} from "express";
 
 export default class AccountController {
     static service = "Account"

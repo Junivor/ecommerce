@@ -1,5 +1,3 @@
-import {where} from "sequelize";
-
 export default class BaseRepository {
     constructor(Model) {
         this.Model = Model

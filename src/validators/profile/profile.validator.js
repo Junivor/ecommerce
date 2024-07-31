@@ -1,5 +1,4 @@
 import BaseValidator from "../base.validator.js";
-import {Model} from "sequelize";
 import ProfileRepository from "../../models/repositories/profile/profile.repository.js";
 import {BadRequestException} from "../../core/error.response.js";
 

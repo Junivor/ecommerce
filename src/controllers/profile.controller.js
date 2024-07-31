@@ -1,6 +1,5 @@
 import {CreatedResponse, OKResponse} from "../core/success.response.js";
 import ProfileService from "../services/profile.service.js";
-import AccountService from "../services/account.service.js";
 
 export default class ProfileController {
     static serviceName = "Profile"

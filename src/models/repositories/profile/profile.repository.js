@@ -1,7 +1,7 @@
 import BaseRepository from "../base.repository.js";
 import Databases from "../../../dbs/init.databases.js";
 import {Profile} from "../../mysql/association/account_profile.js";
-const client = Databases.getClientFromMysql("shop")
+
 
 export default new class ProfileRepository extends BaseRepository {
     constructor() {
