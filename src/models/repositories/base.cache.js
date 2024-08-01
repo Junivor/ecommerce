@@ -50,13 +50,13 @@ export default class BaseCache extends Ioredis {
         return this.EXPIRE_TIME
     }
 
-    set({key = "", value = "", timeFormat = this.getTimeFormat() , time = this.getExpireTime()}) {
+    set({key = "", value = null, timeFormat = this.getTimeFormat() , time = this.getExpireTime()}) {
         const PREFIX_KEY = this.getPrefixKey()
-        // this.validator.validateRequestField({key, value, PREFIX_KEY})
+        console.log(`SET: ${PREFIX_KEY}:${key}`)
 
-        return this.client.set(`${PREFIX_KEY}:${key}`, JSON.stringify(value), timeFormat, time)
+        this.client.set(`${PREFIX_KEY}:${key}`, JSON.stringify(value), timeFormat, time)
+        return value
     }
-
     get(key) {
         const PREFIX_KEY = this.getPrefixKey()
         this.validator.validateRequestField({key})
@@ -65,4 +65,14 @@ export default class BaseCache extends Ioredis {
             .get(`${PREFIX_KEY}:${key}`)
             .then(JSON.parse)
     }
+    del(key) {
+        const PREFIX_KEY = this.getPrefixKey()
+        this.validator.validateRequestField({key})
+
+
+        return this.set({
+            key
+        })
+    }
+
 }

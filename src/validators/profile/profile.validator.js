@@ -8,30 +8,15 @@ export default new class ProfileValidator extends BaseValidator {
     }
 
 
-    async isDuplicate() {
-        const profileNameFields = this.getField("profile_name")
-
-        const profileModel = await ProfileRepository.findOneProfile({
-            profile_name: profileNameFields
-        })
-
-        if (profileModel)
+    async isDuplicate(model) {
+        if (model)
             throw new BadRequestException("Duplicate profile", this.constructor.name)
-
         return this
     }
 
-    async isNotFound() {
-        const profileNameFields = this.getField("profile_name")
-
-        const profileModel = await ProfileRepository.findOneProfile({
-            profile_name: profileNameFields
-        })
-
-        if (!profileModel)
+    async isNotFound(model) {
+        if (!model)
             throw new BadRequestException("Profile not found", this.constructor.name)
-
-        this.setModel(profileModel)
         return this
     }
     validateRequestField(fields) {

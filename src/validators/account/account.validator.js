@@ -9,7 +9,7 @@ export default new class AccountValidator extends BaseValidator {
 
     async isDuplicate() {
         const emailField = this.getField("email")
-        const accountModel = await AccountRepository.findAccountByEmail(emailField)
+        const accountModel = await AccountRepository.findByEmail(emailField)
 
         if (accountModel)
             throw new BadRequestException("Duplicate email", this.serviceName)
@@ -20,7 +20,7 @@ export default new class AccountValidator extends BaseValidator {
         //if there are no account -> throw error
         const usernameField = this.getField("username")
 
-        const accountModel = await AccountRepository.findAccountByUsername({
+        const accountModel = await AccountRepository.findByUserName({
             username: usernameField
         })
 

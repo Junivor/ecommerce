@@ -13,19 +13,19 @@ export default new class AccountRepository extends BaseRepository {
     updateAccount(Model, update) {
         return super.updateModel(Model, update)
     }
-    findAccountByEmail(email, include) {
+    findByEmail(email, include) {
         return super.findModel({
             whereFields: {email},
             include
         })
     }
-    findAccountByUsername({username, include}) {
+    findByUserName({username, include}) {
         return super.findModel({
             whereFields: {username},
             include
         })
     }
-    deleteAccountById({account_id, transaction}) {
+    deleteByAccountId({account_id, transaction}) {
         return super.deleteModel({
             whereFields: {account_id},
             transaction

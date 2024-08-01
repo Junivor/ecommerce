@@ -1,2 +1,2 @@
 ### GET request to example server
-GET http://localhost:3030/api/v1/profile/khoi
+GET http://localhost:3030/api/v1/profile/khoinguyendang

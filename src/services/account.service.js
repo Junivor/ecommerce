@@ -21,7 +21,7 @@ export default new class AccountService extends BaseService {
             .validateRequestField()
             .isNotFound()
 
-        return await AccountRepository.findAccountByUsername({
+        return await AccountRepository.findByUserName({
             username: request.username,
             include: Profile
         })
@@ -60,7 +60,7 @@ export default new class AccountService extends BaseService {
                 account_id: validatedModel.account_id,
                 transaction
             })
-            await AccountRepository.deleteAccountById({
+            await AccountRepository.deleteByAccountId({
                 account_id: validatedModel.account_id,
                 transaction
             })

@@ -4,7 +4,7 @@ Content-Type: application/json
 
 {
   "account_id": "daa60b5b-f7de-4bd3-9d83-33e266018fa7",
-  "profile_name": "khoidz"
+  "profile_name": "khoinguyen"
 }
 
 ### DELETE a profile
@@ -12,7 +12,7 @@ POST http://localhost:3030/api/v1/profile/delete
 Content-Type: application/json
 
 {
-  "profile_name": "khoidz"
+  "profile_name": "khoinguyen"
 }
 
 ### Update a profile
@@ -20,8 +20,8 @@ POST http://localhost:3030/api/v1/profile/update
 Content-Type: application/json
 
 {
-  "profile_name": "khoidz",
+  "profile_name": "khoinguyen",
   "update": {
-    "profile_name": "cc"
+    "profile_name": "khoinguyendang"
   }
 }

@@ -12,8 +12,21 @@ export default new class ProfileCache extends BaseCache {
     set({key, value, timeFormat, time}) {
         return super.set({key, value, timeFormat, time});
     }
-
     get(key) {
         return super.get(key);
+    }
+    del(key) {
+        return super.del(key);
+    }
+
+    async read(from = "profile_name") {
+        return async (req, res, next) => {
+            try {
+                const key = req.params[from];
+
+            } catch (error) {
+                next(error);
+            }
+        };
     }
 }
