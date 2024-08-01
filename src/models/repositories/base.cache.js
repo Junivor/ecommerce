@@ -66,10 +66,6 @@ export default class BaseCache extends Ioredis {
             .then(JSON.parse)
     }
     del(key) {
-        const PREFIX_KEY = this.getPrefixKey()
-        this.validator.validateRequestField({key})
-
-
         return this.set({
             key
         })

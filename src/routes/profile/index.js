@@ -1,7 +1,6 @@
 import express from "express";
 import catchAsync from "../../helpers/catchAsync.js";
 import ProfileController from "../../controllers/profile.controller.js";
-import ProfileCache from "../../models/repositories/profile/profile.cache.js";
 import Middleware from "../../middlewares/middleware.js";
 
 const profileRoute = express.Router()

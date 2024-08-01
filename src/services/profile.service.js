@@ -1,7 +1,7 @@
 import BaseService from "./base.service.js";
 import ProfileRepository from "../models/repositories/profile/profile.repository.js";
 import ProfileValidator from "../validators/profile/profile.validator.js";
-import {BadRequestException, NotFoundException} from "../core/error.response.js";
+import {NotFoundException} from "../core/error.response.js";
 import ProfileCache from "../models/repositories/profile/profile.cache.js";
 
 export default new class ProfileService extends BaseService {

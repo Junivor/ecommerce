@@ -18,15 +18,4 @@ export default new class ProfileCache extends BaseCache {
     del(key) {
         return super.del(key);
     }
-
-    async read(from = "profile_name") {
-        return async (req, res, next) => {
-            try {
-                const key = req.params[from];
-
-            } catch (error) {
-                next(error);
-            }
-        };
-    }
 }
