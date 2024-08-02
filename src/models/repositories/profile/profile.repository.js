@@ -9,19 +9,18 @@ export default new class ProfileRepository extends BaseRepository {
 
     createProfile(payload, transaction) {
         return super.createModel(payload, transaction);
-
     }
-    findByProfileName({ profile_name }) {
+    findByProfileName({ profile_alias }) {
         return super.findModel({
-            whereFields: {profile_name},
+            whereFields: {profile_alias},
         })
     }
     deleteProfileModel(Model) {
         return Model.destroy()
     }
-    deleteByProfileName({profile_name}) {
+    deleteByProfileName({profile_alias}) {
         return super.deleteModel({
-            whereFields: {profile_name},
+            whereFields: {profile_alias},
         })
     }
     deleteProfileById({account_id, transaction}) {

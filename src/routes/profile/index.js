@@ -6,8 +6,10 @@ import Middleware from "../../middlewares/middleware.js";
 const profileRoute = express.Router()
 
 
+profileRoute.get("/:profile_name", catchAsync(Middleware.validatePath), catchAsync(Middleware.readCache("profile")), catchAsync(ProfileController.findOne))
 
-profileRoute.get("/:profile_name", catchAsync(Middleware.readCache("profile")), catchAsync(ProfileController.findOne))
+profileRoute.use(catchAsync(Middleware.validateRequestBody))
+
 profileRoute.post("", catchAsync(ProfileController.create))
 profileRoute.post("/delete", catchAsync(ProfileController.remove))
 profileRoute.post("/update", catchAsync(ProfileController.update))

@@ -13,7 +13,13 @@ export default new class AccountRepository extends BaseRepository {
     updateAccount(Model, update) {
         return super.updateModel(Model, update)
     }
-    findByEmail(email, include) {
+    findAccount({ whereFields, include }) {
+        return super.findModel({
+            whereFields,
+            include
+        })
+    }
+    findByEmail({email, include}) {
         return super.findModel({
             whereFields: {email},
             include

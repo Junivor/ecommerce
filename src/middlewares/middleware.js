@@ -1,6 +1,7 @@
 import {BadRequestException, NotFoundException} from "../core/error.response.js";
 import ProfileCache from "../models/repositories/profile/profile.cache.js";
 import {OKResponse} from "../core/success.response.js";
+import AccountCache from "../models/repositories/account/account.cache.js";
 
 export default class Middleware {
     static serviceName = "Middleware"
@@ -26,30 +27,48 @@ export default class Middleware {
     static readCache(from = "") {
         if (!from) throw new NotFoundException("This field cant be empty")
         return async (req, res, next) => {
-            const profileNameField = req.params.profile_name
+            const SUFFIX_KEY = Object.values(req.params).at(0)
             const client = this.getCache(from.toLowerCase())
 
-            const receivedCache = await client.get(profileNameField)
+            const receivedCache = await client.get(SUFFIX_KEY)
 
-            if (!receivedCache) {
-                client.set({
-                    key: profileNameField
-                })
-                throw new NotFoundException(`Profile not found`, this.serviceName)
-            } 
-           return new OKResponse({
-               service: this.serviceName,
-               message: "GET from cache",
-               metadata: receivedCache.data
-           }).send(res)
+            if (receivedCache) {
+                if (receivedCache.data) {
+                    return new OKResponse({
+                        service: this.serviceName,
+                        message: "GET from cache",
+                        metadata: receivedCache.data
+                    }).send(res)
+                } else {
+                    throw new NotFoundException("Profile not found");
+                }
+            }
+
+            return next();
         }
     }
 
-    static async validateParams(req, res, next) {
-        const requestFields = {
-            ...req.body,
+
+    static async validatePath(req, res, next) {
+        const pathFields = {
             ...req.params,
             ...req.query
+        }
+
+        for (const [key, value] of Object.entries(pathFields)) {
+            if (!value) {
+                throw new BadRequestException(`${key} field can't be null or empty`);
+            }
+        }
+
+
+        return next()
+    }
+
+    static async validateRequestBody(req, res, next) {
+        const requestFields = {
+            ...req.body,
+
         }
 
         if (!requestFields || typeof requestFields !== 'object' || Object.keys(requestFields).length === 0) {
@@ -76,3 +95,4 @@ export default class Middleware {
 }
 
 Middleware.registerCache(Middleware.CACHE.PROFILE, ProfileCache)
+Middleware.registerCache(Middleware.CACHE.ACCOUNT, AccountCache)

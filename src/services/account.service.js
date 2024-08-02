@@ -1,11 +1,12 @@
 import AccountRepository from "../models/repositories/account/account.repository.js";
 import AccountValidator from "../validators/account/account.validator.js";
-import {BadRequestException} from "../core/error.response.js";
+import {BadRequestException, NotFoundException} from "../core/error.response.js";
 import Databases from "../dbs/init.databases.js";
 import BaseService from "./base.service.js";
 import ProfileService from "./profile.service.js";
 
 import Profile from "../models/mysql/profile.model.js";
+import AccountCache from "../models/repositories/account/account.cache.js";
 
 const client = Databases.getClientFromMysql("shop")
 
@@ -16,67 +17,103 @@ export default new class AccountService extends BaseService {
         super()
     }
 
-    async findAccount(request) {
-        await AccountValidator.setFields(request)
-            .validateRequestField()
-            .isNotFound()
-
-        return await AccountRepository.findByUserName({
-            username: request.username,
+    async findAccount({ username }) {
+        const foundAccount = AccountRepository.findByUserName({
+            username,
             include: Profile
         })
+
+
+        if (!foundAccount) {
+            AccountCache.set({
+                key: username
+            })
+            throw new BadRequestException("Not found account")
+        }
+
+        AccountCache.set({
+            key: username,
+            value: foundAccount
+        })
+
+        return foundAccount
     }
 
     async createAccount(request) {
-        await AccountValidator.setFields(request)
-            .validateRequestField()
-            .isDuplicate()
+        await this.validateAccount({
+            request,
+            callback: AccountValidator.isDuplicate.bind(AccountValidator)
+        })
 
-        return await client.transaction(async transaction => {
+        const payload = await client.transaction(async transaction => {
             try {
                 const createdAccount = await AccountRepository.createAccount(request, transaction)
 
-                await ProfileService.createProfile({
+                const createdProfile = await ProfileService.createProfile({
                     account_id: createdAccount.account_id,
-                    profile_name: createdAccount.username
+                    profile_alias: createdAccount.username
                 }, transaction)
-                return createdAccount
+
+
+                return {
+                    hKey: createdAccount.account_id,
+                    fKey: createdProfile.profile_alias,
+                    value: createdAccount
+                }
             } catch(error) {
                 throw new BadRequestException(error, this.constructor.name)
             }
         })
 
+        AccountCache.hSet(payload)
+
+        return payload
     }
     async deleteAccount(request) {
+        const accountModel = await this.validateAccount({
+            request,
+            findField: "username",
+            callback: data => {return data}
+        })
 
-        await AccountValidator.setFields(request)
-            .validateRequestField()
-            .isNotFound()
-
-        const validatedModel = AccountValidator.getModel()
-
-        return await client.transaction(async transaction => {
+        await client.transaction(async transaction => {
             await ProfileService.deleteMultipleProfile({
-                account_id: validatedModel.account_id,
+                account_id: accountModel.account_id,
                 transaction
             })
-            await AccountRepository.deleteByAccountId({
-                account_id: validatedModel.account_id,
+            return await AccountRepository.deleteByAccountId({
+                account_id: accountModel.account_id,
                 transaction
             })
-            return "Successfully"
+        })
+
+        return AccountCache.del({
+            key: accountModel.account_id,
         })
     }
     async updateAccount(request) {
-        await AccountValidator
-            .setFields(request)
-            .validateRequestField()
-            .isNotFound()
+        const accountModel = await this.validateAccount({
+            request,
+            findField: "username",
+            callback: data => {return data}
+        })
 
-        const validatedModel = AccountValidator.getModel()
-        const validatedFields = AccountValidator.getFields()
-        const { account } = validatedFields.update
+        const { account } = request.update
 
-        return await AccountRepository.updateAccount(validatedModel, account)
+        return await AccountRepository.updateAccount(accountModel, account)
+    }
+    async validateAccount({ request, findField = "email", callback = null } = {}) {
+        const fieldValue = request[findField]
+        const foundAccount = await AccountRepository.findAccount({
+            whereFields: {
+                [findField]: fieldValue
+            }
+        })
+
+        if (callback) {
+            return callback(foundAccount)
+        }
+
+        AccountValidator.isNotFound(foundAccount)
     }
 }

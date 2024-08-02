@@ -13,7 +13,7 @@ POST http://localhost:3030/api/v1/account/delete
 Content-Type: application/json
 
 {
-  "username": "khoi"
+  "username": "user-1722570870833"
 }
 
 ### UPDATE a user
@@ -21,11 +21,10 @@ POST http://localhost:3030/api/v1/account/update
 Content-Type: application/json
 
 {
-  "username": "user-1722385917616",
+  "email": "koi@gmail.com",
   "update": {
     "account": {
-      "username": "koi04",
-      "email": "koi@gmail.com"
+      "username": "koi045"
     },
     "profile": {
       "profile_name": "Love coconut"

@@ -11,10 +11,15 @@ export default class BaseCache extends Ioredis {
         this.TIME_FORMAT = TIME_FORMAT.toUpperCase()
         this.client = this.getClient("redis_zero")
         this.validator = new BaseValidator()
+        this.KEY_STATUS = {
+            EXIT: 1,
+            NOT_EXIT: 0,
+
+        }
+
     }
 
     setPrefixKey(key) {
-        this.validator.validateRequestField({key})
 
         if (typeof key !== "string" )
             throw new BadRequestException("Invalid datatype")
@@ -22,7 +27,6 @@ export default class BaseCache extends Ioredis {
         this.PREFIX_KEY = key
     }
     setTimeFormat(value = "") {
-        this.validator.validateRequestField({value})
 
 
         if (typeof value !== "string" )
@@ -54,21 +58,32 @@ export default class BaseCache extends Ioredis {
         const PREFIX_KEY = this.getPrefixKey()
         console.log(`SET: ${PREFIX_KEY}:${key}`)
 
-        this.client.set(`${PREFIX_KEY}:${key}`, JSON.stringify(value), timeFormat, time)
+        this.client.set(`${PREFIX_KEY}:${key}`, JSON.stringify({
+            data: value
+        }), timeFormat, time)
         return value
     }
-    get(key) {
+    get({key}) {
         const PREFIX_KEY = this.getPrefixKey()
-        this.validator.validateRequestField({key})
 
         return this.client
             .get(`${PREFIX_KEY}:${key}`)
             .then(JSON.parse)
     }
-    del(key) {
+    del({key}) {
         return this.set({
             key
         })
     }
+
+    TTL({key}) {
+        return this.client.TTL(key)
+    }
+
+    expire({key, expireTime}) {
+        return this.client.expire(`${this.PREFIX_KEY}:${key}`, expireTime)
+    }
+
+    hSet({hKey = "", fKey = "", value = null, timeFormat = this.getTimeFormat() , time = this.getExpireTime()}) {}
 
 }

@@ -78,9 +78,6 @@ export default class Ioredis extends Init {
     handleEventConnect(clientName = "", client = {}) {
         super.handleEventConnect(clientName, client)
     }
-    handleTimeoutError() {
-        super.handleTimeoutError();
-    }
     printClientStatusTable() {
         super.printClientStatusTable()
     }

@@ -18,13 +18,20 @@ Profile.init({
         allowNull: false,
         defaultValue: "example_user"
     },
+    profile_alias: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true,
+    },
     profile_picture: {
         type: DataTypes.STRING,
         defaultValue: "account-example.jpg"
     },
     phone_number: {
         type: DataTypes.STRING,
-        unique: true
+        allowNull: false,
+        defaultValue: "000-000-001",
+        // unique: true
     },
     verified: {
         type: DataTypes.BOOLEAN,

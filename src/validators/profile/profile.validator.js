@@ -3,7 +3,9 @@ import {BadRequestException} from "../../core/error.response.js";
 
 export default new class ProfileValidator extends BaseValidator {
     constructor() {
-        super()
+        super({
+            modelName: "Profile"
+        })
     }
 
 

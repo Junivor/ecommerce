@@ -17,6 +17,7 @@ export default class BaseRepository {
         return Model.save()
     }
     findModel({ whereFields = {}, include } = {}) {
+
         const foundModel = this.Model.findOne({
             where: {...whereFields},
             include
