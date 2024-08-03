@@ -1,6 +1,5 @@
 import {DataTypes, Model} from "sequelize";
 import Databases from "../../dbs/init.databases.js";
-import Role from "./role.model.js";
 
 export default class Grant extends Model {}
 
