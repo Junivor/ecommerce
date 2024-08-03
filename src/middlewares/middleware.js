@@ -66,9 +66,10 @@ export default class Middleware {
     }
 
     static async validateRequestBody(req, res, next) {
+
+
         const requestFields = {
             ...req.body,
-
         }
 
         if (!requestFields || typeof requestFields !== 'object' || Object.keys(requestFields).length === 0) {

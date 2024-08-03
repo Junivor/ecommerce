@@ -62,6 +62,7 @@ export default class Mongo extends Init{
         const lowerCaseName = super.connect(clientName, uri)
         const client = mongoose.createConnection(uri)
 
+        this.validator.setObject(client)
         this.setClient(lowerCaseName, client)
         this.setRetryClient(lowerCaseName)
         this.setClientStatus(lowerCaseName, this.CONNECT_STATUS.CONNECTED)
@@ -95,6 +96,6 @@ export default class Mongo extends Init{
     }
 }
 
-Mongo.registerURI("local", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_LOCAL}`)
+Mongo.registerURI("shop", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_SHOP}`)
 Mongo.registerURI("clone", `mongodb://${process.env.MONGO_LOCAL_HOST}:${process.env.MONGO_LOCAL_PORT}/${process.env.MONGO_DB_CLONE}`)
 

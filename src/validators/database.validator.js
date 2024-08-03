@@ -37,6 +37,7 @@ export default class DatabaseValidator {
         const lowerCaseString = this.getLowerCaseString()
         const object = this.getObject(lowerCaseString)
 
+
         if (Boolean(object)) return this
         else throw new Error(`${this.title} is not exist`)
     }

@@ -1,31 +1,46 @@
-import BaseRepository from "../base.repository.js";
 import {Profile} from "../../mysql/association/account_profile.js";
 
 
-export default new class ProfileRepository extends BaseRepository {
-    constructor() {
-        super(Profile)
+export default class ProfileRepository extends Profile {
+    static createProfile({account_id, phone_number, profile_alias, transaction = null}) {
+        return this.create({
+            account_id,
+            phone_number,
+            profile_alias
+        }, {transaction})
     }
+    static updateProfile({ Model, update }) {
+        for (const [key, value] of Object.entries(update)) {
+            Model[key] = value
+        }
 
-    createProfile(payload, transaction) {
-        return super.createModel(payload, transaction);
+        return Model.save()
     }
-    findByProfileName({ profile_alias }) {
-        return super.findModel({
-            whereFields: {profile_alias},
+    static findProfile({ findField, fieldValue, raw = false }) {
+        return this.findOne({
+            where: {
+                [findField]: fieldValue
+            }
         })
     }
-    deleteProfileModel(Model) {
+    static findByProfileName(profile_name) {
+        return this.findProfile({
+            findField: "profile_name",
+            fieldValue: profile_name
+        })
+    }
+    static findByProfileAlias(profile_alias) {
+        return this.findProfile({
+            findField: "profile_alias",
+            fieldValue: profile_alias
+        })
+    }
+    static deleteProfile({ Model }) {
         return Model.destroy()
     }
-    deleteByProfileName({profile_alias}) {
-        return super.deleteModel({
-            whereFields: {profile_alias},
-        })
-    }
-    deleteProfileById({account_id, transaction}) {
-        return super.deleteModel({
-            whereFields: {account_id},
+    static deleteAllProfile({ account_id, transaction }) {
+        return this.destroy({
+            where: {account_id},
             transaction
         })
     }

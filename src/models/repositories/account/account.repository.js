@@ -1,41 +1,52 @@
-import BaseRepository from "../base.repository.js";
 import {Account} from "../../mysql/association/account_profile.js";
 
 
-export default new class AccountRepository extends BaseRepository {
-    constructor() {
-        super(Account)
+export default class AccountRepository extends Account {
+    static createAccount({ email, password,  transaction = null}) {
+        return this.create({
+            email, password
+        }, {transaction})
     }
+    static updateAccount({Model, update}) {
+        const UpdatedModel = Model
 
-    createAccount(payload, transaction = null) {
-        return super.createModel(payload, transaction);
-    }
-    updateAccount(Model, update) {
-        return super.updateModel(Model, update)
-    }
-    findAccount({ whereFields, include }) {
-        return super.findModel({
-            whereFields,
-            include
-        })
-    }
-    findByEmail({email, include}) {
-        return super.findModel({
-            whereFields: {email},
-            include
-        })
-    }
-    findByUserName({username, include}) {
-        return super.findModel({
-            whereFields: {username},
-            include
-        })
-    }
-    deleteByAccountId({account_id, transaction}) {
-        return super.deleteModel({
-            whereFields: {account_id},
-            transaction
-        })
-    }
+        for (const [key, value] of Object.entries(update)) {
+            Model[key] = value
+        }
 
+        return UpdatedModel.save()
+    }
+    static setActivatedAccount({ Model }) {
+        this.updateAccount({
+            Model, update: {
+                activated: true
+            }
+        })
+    }
+    static findByField({fieldName, fieldValue, include = null, raw = false}) {
+        return this.findOne({
+            where: {
+                [fieldName]: fieldValue
+            },
+            include,
+            raw
+        })
+    }
+    static findByUserName({username, include, raw}) {
+        return this.findByField({
+            fieldName: "username",
+            fieldValue: username,
+            include, raw
+        })
+    }
+    static findByEmail({email, include, raw}) {
+        return this.findByField({
+            fieldName: "email",
+            fieldValue: email,
+            include, raw
+        })
+    }
+    static deleteAccount({Model, transaction}) {
+        return Model.destroy({transaction})
+    }
 }

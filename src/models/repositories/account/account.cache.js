@@ -40,7 +40,6 @@ export default new class AccountCache extends BaseCache {
 
         return hKey
     }
-
     hDel({hKey = "", fKey = ""}) {
         const PROFILE_PREFIX_KEY = ProfileCache.PREFIX_KEY
         const hKeyFull = `USR:04ac6181-0270-454f-917f-16be6afaf088`

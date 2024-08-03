@@ -1,19 +1,9 @@
-### CREATE new user
-POST http://localhost:3030/api/v1/account
-Content-Type: application/json
-
-{
-  "email": "hello@khoi.com",
-  "password": "123456"
-}
-
-
 ### DELETE a user
 POST http://localhost:3030/api/v1/account/delete
 Content-Type: application/json
 
 {
-  "username": "user-1722570870833"
+  "username": "user-1722666867006"
 }
 
 ### UPDATE a user
@@ -21,7 +11,7 @@ POST http://localhost:3030/api/v1/account/update
 Content-Type: application/json
 
 {
-  "email": "koi@gmail.com",
+  "email": "hello@khoi.com",
   "update": {
     "account": {
       "username": "koi045"

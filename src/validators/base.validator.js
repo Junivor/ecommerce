@@ -1,5 +1,3 @@
-import {BadRequestException, NotFoundException} from "../core/error.response.js";
-
 export default class BaseValidator {
     constructor({modelName = ""} = {}) {
         this.modelName = modelName

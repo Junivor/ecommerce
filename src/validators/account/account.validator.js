@@ -1,6 +1,4 @@
 import BaseValidator from "../base.validator.js";
-import AccountRepository from "../../models/repositories/account/account.repository.js";
-import {BadRequestException, NotFoundException} from "../../core/error.response.js";
 
 export default new class AccountValidator extends BaseValidator {
     constructor() {

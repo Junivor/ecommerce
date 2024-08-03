@@ -1,5 +1,5 @@
 ### GET user by username
-GET http://localhost:3030/api/v1/account/koi045
+GET http://localhost:3030/api/v1/account/user-1722629810256
 
 
 ### GET user by email

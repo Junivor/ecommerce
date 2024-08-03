@@ -3,7 +3,7 @@ POST http://localhost:3030/api/v1/profile
 Content-Type: application/json
 
 {
-  "account_id": "04ac6181-0270-454f-917f-16be6afaf088",
+  "account_id": "4119c89b-0daa-4acc-ae18-b39ea83bf46b",
   "profile_alias": "khoinguyen",
   "phone_number": "1"
 }
@@ -13,7 +13,7 @@ POST http://localhost:3030/api/v1/profile/delete
 Content-Type: application/json
 
 {
-  "profile_alias": "khoinguyen"
+  "profile_alias": "khoinguyendang"
 }
 
 ### Update a profile
@@ -21,8 +21,8 @@ POST http://localhost:3030/api/v1/profile/update
 Content-Type: application/json
 
 {
-  "profile_name": "khoinguyen",
+  "profile_alias": "khoinguyen",
   "update": {
-    "profile_name": "khoinguyendang"
+    "profile_alias": "khoinguyendang"
   }
 }

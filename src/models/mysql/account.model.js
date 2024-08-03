@@ -1,7 +1,6 @@
 import Databases from "../../dbs/init.databases.js";
 import {DataTypes, Model} from "sequelize";
 import {generateRandomNumber} from "../../utils/utils.js";
-import Role from "./role.model.js";
 
 const sequelize = Databases.getClientFromMysql("shop")
 

@@ -1,0 +1,13 @@
+###  POST: Register a new account
+POST http://localhost:3030/api/v1/auth/register
+Content-Type: application/json
+
+{
+  "email": "aws.koi04@gmail.com",
+  "password": "123456",
+  "confirmPassword": "123456"
+}
+
+### POST: Verify account
+POST http://localhost:3030/api/v1/auth/verify/cf1153e26aef0d05df7b84435394f044
+

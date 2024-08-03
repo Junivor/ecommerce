@@ -1,24 +1,33 @@
 import BaseService from "./base.service.js";
 import ProfileRepository from "../models/repositories/profile/profile.repository.js";
-import ProfileValidator from "../validators/profile/profile.validator.js";
-import {NotFoundException} from "../core/error.response.js";
+import {BadRequestException, NotFoundException} from "../core/error.response.js";
 import ProfileCache from "../models/repositories/profile/profile.cache.js";
 import AccountCache from "../models/repositories/account/account.cache.js";
 
 
 export default new class ProfileService extends BaseService {
-    async createProfile(request, transaction) {
-        await this.validateProfile({
-            request,
-            callback: ProfileValidator.isDuplicate.bind(ProfileValidator)
+    async createProfile({account_id, profile_alias, phone_number = "000-000-100", transaction = null}) {
+        if (!account_id)
+            throw new NotFoundException("Account_id not found")
+
+        if (!profile_alias)
+            throw new NotFoundException("Profile alias not found")
+
+        if (!phone_number)
+            throw new NotFoundException("Phone number not found")
+
+        await this.validateDuplicate({
+            fieldValue: profile_alias,
         })
 
-        const createdProfile = await ProfileRepository.createProfile(request, transaction)
+        const createdProfile = await ProfileRepository.createProfile({
+            account_id, profile_alias, phone_number, transaction
+        })
 
 
         if (!transaction) {
             AccountCache.hSet({
-                hKey: request.account_id,
+                hKey: createdProfile.account_id,
                 fKey: createdProfile.profile_alias,
                 value: createdProfile
             })
@@ -26,17 +35,19 @@ export default new class ProfileService extends BaseService {
 
         return createdProfile
     }
-    async updateProfile(request) {
-        const profileModel = await this.validateProfile(request)
+    async updateProfile({ profile_alias, update }) {
+        const profileModel = await this.validateProfile({
+            fieldValue: profile_alias,
+            callback: data => {return data}
+        })
 
-        const validatedFields = ProfileValidator.getFields()
-        const { profile_alias, update } = validatedFields
-
-
-        const modifiedProfile = await ProfileRepository.updateModel(profileModel, update)
+        const modifiedProfile = await ProfileRepository.updateProfile({
+            Model: profileModel,
+            update
+        })
 
         await ProfileCache.del({
-            key: profile_alias
+            key: modifiedProfile.profile_alias
         })
 
         return ProfileCache.set({
@@ -44,29 +55,24 @@ export default new class ProfileService extends BaseService {
             value: modifiedProfile
         })
     }
-    async findProfile(request) {
-        const profileAliasField = request.profile_alias
-
-        const foundProfile = await ProfileRepository.findByProfileName({
-            profile_alias: profileAliasField
-        })
-
+    async findProfile({profile_alias}) {
+        const foundProfile = await ProfileRepository.findByProfileAlias(profile_alias)
 
         if (!foundProfile) {
             ProfileCache.set({
-                key: profileAliasField,
+                key: profile_alias,
             })
             throw new NotFoundException("Profile not found")
         }
 
         return ProfileCache.set({
-            key: profileAliasField,
+            key: profile_alias,
             value: foundProfile
         })
     }
-    async deleteOneProfile(request) {
+    async deleteOneProfile({ profile_alias }) {
         const Model = await this.validateProfile({
-            request,
+            fieldValue: profile_alias,
             callback: data => {return data}
         })
 
@@ -74,26 +80,29 @@ export default new class ProfileService extends BaseService {
             fKey: Model.profile_alias
         })
 
-        return await ProfileRepository.deleteProfileModel(Model)
+        return await ProfileRepository.deleteProfile({Model})
     }
     async deleteMultipleProfile({account_id, transaction}) {
-
-        return await ProfileRepository.deleteProfileById({account_id, transaction})
+        return await ProfileRepository.deleteAllProfile({account_id, transaction})
     }
-    async validateProfile({request, findField = "profile_alias", callback}) {
-        const fieldValue = request[findField]
-
-        const foundProfile = await ProfileRepository.findModel({
-            whereFields: {
-                [findField]: fieldValue
-            }
-        })
-
-        if (callback)
-            return callback(foundProfile)
-
+    async validateProfile({findField = "profile_alias", fieldValue = "", callback}) {
+        const foundProfile = await ProfileRepository.findByProfileAlias(fieldValue)
 
         if (!foundProfile)
             throw new NotFoundException("Profile not found")
+
+        return callback?.(foundProfile)
+    }
+    async validateDuplicate({findField = "profile_alias", fieldValue = "", callback}) {
+        const foundProfile = await ProfileRepository.findProfile({
+            findField,
+            fieldValue
+        })
+
+        if (foundProfile)
+            throw new BadRequestException("Duplicate account")
+
+        if (callback)
+            return callback?.(foundProfile)
     }
 }
