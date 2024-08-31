@@ -1,5 +1,4 @@
 import * as bcrypt from "bcrypt"
-import * as crypto from "node:crypto";
 import pkg from "jsonwebtoken"
 import AccountRepository from "../models/repositories/account/account.repository.js";
 import {BadRequestException, NotFoundException} from "../core/error.response.js";
@@ -9,7 +8,6 @@ import ProfileService from "./profile.service.js";
 
 import Profile from "../models/mysql/profile.model.js";
 import AccountCache from "../models/repositories/account/account.cache.js";
-import TokenCache from "../models/repositories/token/token.cache.js";
 
 const { sign } = pkg
 
@@ -39,6 +37,27 @@ export default new class AccountService extends BaseService {
 
         AccountCache.set({
             key: username,
+            value: foundAccount
+        })
+
+        return foundAccount
+    }
+    async getMe({ account_id }) {
+        const accountCache = await AccountCache.get({key: account_id})
+
+        if (accountCache) return accountCache
+
+        const foundAccount = await AccountRepository.findById({account_id})
+        if (!foundAccount) {
+            AccountCache.set({
+                key: account_id,
+                value: null
+            })
+            throw new NotFoundException("Account not found!")
+        }
+
+        AccountCache.set({
+            key: account_id,
             value: foundAccount
         })
 
@@ -74,45 +93,13 @@ export default new class AccountService extends BaseService {
         })
 
 
-        const publicKey = crypto.randomBytes(16).toString("hex")
-        const privateKey = crypto.randomBytes(16).toString("hex")
-
-        const accessToken = sign({
-            accountId: payload.account_id,
-        }, publicKey, {
-            expiresIn: "2 days"
-        })
-
-        const refreshToken = sign({
-            accountId: payload.account_id,
-        }, privateKey, {
-            expiresIn: "5 days"
-        })
-
-
         AccountCache.hSet({
             hKey: payload.account_id,
             fKey: payload.profile_alias,
             value: payload.value
         })
 
-        TokenCache.set({
-            key: payload.account_id,
-            value: {
-                publicKey,
-                privateKey,
-                refreshToken,
-                refreshTokenUsed: []
-            }
-        })
-
-        return {
-            accountId: payload.account_id,
-            publicKey,
-            privateKey,
-            accessToken,
-            refreshToken
-        }
+        return payload
     }
     async deleteAccount(request) {
         const accountModel = await this.validateAccount({

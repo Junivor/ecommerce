@@ -27,4 +27,11 @@ export default class AccountController {
             metadata: await AccountService.updateAccount(req.body)
         }).send(res)
     }
+    static async getMe(req, res, next) {
+        new OKResponse({
+            service: AccountController.service,
+            metadata: await AccountService.getMe(req.session)
+        }).send(res)
+    }
+
 }

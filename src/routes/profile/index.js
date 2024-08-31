@@ -8,6 +8,8 @@ const profileRoute = express.Router()
 
 profileRoute.get("/:profile_alias", catchAsync(Middleware.validatePath), catchAsync(Middleware.readCache("profile")), catchAsync(ProfileController.findOne))
 
+
+
 profileRoute.use(catchAsync(Middleware.validateRequestBody))
 
 profileRoute.post("", catchAsync(ProfileController.create))

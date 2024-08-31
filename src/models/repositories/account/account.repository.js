@@ -32,6 +32,11 @@ export default class AccountRepository extends Account {
             raw
         })
     }
+    static findById({ account_id }) {
+        return this.findOne({
+            where: {account_id}
+        })
+    }
     static findByUserName({username, include, raw}) {
         return this.findByField({
             fieldName: "username",

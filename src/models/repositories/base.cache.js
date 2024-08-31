@@ -10,15 +10,11 @@ export default class BaseCache extends Ioredis {
         this.EXPIRE_TIME = EXPIRE_TIME * RAND_NUMBER
         this.TIME_FORMAT = TIME_FORMAT.toUpperCase()
         this.client = this.getClient("redis_zero")
-        this.validator = new BaseValidator()
         this.KEY_STATUS = {
             EXIT: 1,
             NOT_EXIT: 0,
-
         }
-
     }
-
     setPrefixKey(key) {
 
         if (typeof key !== "string" )
@@ -43,7 +39,6 @@ export default class BaseCache extends Ioredis {
 
         this.EXPIRE_TIME = value * RAND_NUMBER
     }
-
     getPrefixKey() {
         return this.PREFIX_KEY
     }
@@ -53,15 +48,19 @@ export default class BaseCache extends Ioredis {
     getExpireTime() {
         return this.EXPIRE_TIME
     }
-
     set({key = "", value = null, timeFormat = this.getTimeFormat() , time = this.getExpireTime()}) {
-        const PREFIX_KEY = this.getPrefixKey()
-        console.log(`SET: ${PREFIX_KEY}:${key}`)
+        try {
+            const PREFIX_KEY = this.getPrefixKey()
+            console.log(`SET: ${PREFIX_KEY}:${key}`)
+            console.log(`DATA: ${value}`)
 
-        this.client.set(`${PREFIX_KEY}:${key}`, JSON.stringify({
-            data: value
-        }), timeFormat, time)
-        return value
+            this.client.set(`${PREFIX_KEY}:${key}`, JSON.stringify({
+                data: value
+            }), timeFormat, time)
+            return value
+        } catch (error) {
+            console.error(error)
+        }
     }
     get({key}) {
         const PREFIX_KEY = this.getPrefixKey()
@@ -75,15 +74,12 @@ export default class BaseCache extends Ioredis {
             key
         })
     }
-
     TTL({key}) {
         return this.client.TTL(key)
     }
-
     expire({key, expireTime}) {
         return this.client.expire(`${this.PREFIX_KEY}:${key}`, expireTime)
     }
-
     hSet({hKey = "", fKey = "", value = null, timeFormat = this.getTimeFormat() , time = this.getExpireTime()}) {}
 
 }

@@ -9,5 +9,19 @@ Content-Type: application/json
 }
 
 ### POST: Verify account
-POST http://localhost:3030/api/v1/auth/verify/cf1153e26aef0d05df7b84435394f044
+POST http://localhost:3030/api/v1/auth/verify/b443e09846575144f808f480ad6cd419
 
+### POST: LOG IN
+POST http://localhost:3030/api/v1/auth/login
+Content-Type: application/json
+
+{
+  "email": "aws.koi04@gmail.com",
+  "password": "123456"
+}
+
+### POST: LOG OUT
+POST http://localhost:3030/api/v1/auth/logout
+
+### POST: REFRESH
+POST http://localhost:3030/api/v1/auth/refresh

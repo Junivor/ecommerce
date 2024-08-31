@@ -1,7 +1,7 @@
-import Databases from "../../dbs/init.databases.js";
+import Databases from "../../../dbs/init.databases.js";
 import {DataTypes, Model} from "sequelize";
-import Role from "./role.model.js";
-import Grant from "./grant.model.js";
+import Role from "../role.model.js";
+import Grant from "../grant.model.js";
 
 const sequelize = Databases.getClientFromMysql("shop")
 

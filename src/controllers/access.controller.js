@@ -16,7 +16,26 @@ export default class AccessController {
             metadata: await AccessService.verify(req.params)
         }).send(res)
     }
-    static async login(req, res, next) {}
-    static async logout(req, res, next) {}
+    static async login(req, res, next) {
+            new OKResponse({
+            service: "Access",
+            metadata: await AccessService.login({
+                ...req.body,
+                res
+            })
+        }).send(res)
+    }
+    static async logout(req, res, next) {
+        new OKResponse({
+            service: "Access",
+            metadata: await AccessService.logout({...req, res})
+        }).send(res)
+    }
     static async close(req, res, next) {}
+    static async refresh(req, res, next) {
+        new OKResponse({
+            service: "Access",
+            metadata: await AccessService.refresh({ user: req.user, cookies: req.cookies, res })
+        }).send(res)
+    }
 }

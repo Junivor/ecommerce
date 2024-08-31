@@ -1,6 +1,5 @@
 import {Error} from "mongoose";
 
-console.log("VALIDATOR")
 
 
 export default class DatabaseValidator {
@@ -15,7 +14,6 @@ export default class DatabaseValidator {
         if (!this.lowerCaseString) throw new Error("String cant be empty")
     }
     isParamEmpty(...params) {
-        // console.log("isParamEmpty::::", params)
         if (!params.every(Boolean))
             throw new Error("Some params are empty, check again")
         return this

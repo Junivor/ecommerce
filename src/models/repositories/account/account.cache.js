@@ -12,7 +12,7 @@ export default new class AccountCache extends BaseCache {
 
 
 
-    set({key = "", value = null, timeFormat = this.getTimeFormat(), time = this.getExpireTime()}) {
+    set({key = "", value = null, timeFormat = this.getTimeFormat(), time = this.getExpireTime()} = {}) {
         return super.set({key, value, timeFormat, time});
     }
     get({key}) {

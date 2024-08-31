@@ -1,4 +1,4 @@
-import {OTP} from "../../mongo/otp.model.js";
+import OTP from "../../mysql/otp.model.js";
 
 export default class OTPRepository extends OTP {
     static createOTP({ otp_token, otp_email }) {
@@ -9,10 +9,12 @@ export default class OTPRepository extends OTP {
     }
     static findOTP({ otp_token }) {
         return this.findOne({
-            otp_token
+            where: {otp_token}
         })
     }
     static deleteOTP({ otp_token }) {
-        return this.deleteOne({otp_token})
+        return this.destroy({
+            where: {otp_token}
+        })
     }
 }

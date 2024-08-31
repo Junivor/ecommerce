@@ -3,7 +3,7 @@ POST http://localhost:3030/api/v1/account/delete
 Content-Type: application/json
 
 {
-  "username": "user-1722666867006"
+  "username": "user-1724335848711"
 }
 
 ### UPDATE a user
