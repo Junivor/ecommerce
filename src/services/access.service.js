@@ -42,7 +42,7 @@ export default new class AccessService extends BaseService {
 
         const OTP = crypto.randomBytes(16).toString("hex")
 
-        const result = await OTPRepository.createOTP({
+        await OTPRepository.createOTP({
             otp_token: OTP,
             otp_email: email
         })

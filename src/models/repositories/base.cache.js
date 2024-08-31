@@ -1,6 +1,5 @@
 import Ioredis from "../../dbs/init.ioredis.js";
 import {BadRequestException} from "../../core/error.response.js";
-import BaseValidator from "../../validators/base.validator.js";
 import {RAND_NUMBER} from "../../utils/constant.js";
 
 export default class BaseCache extends Ioredis {

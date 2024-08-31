@@ -9,8 +9,6 @@ import ProfileService from "./profile.service.js";
 import Profile from "../models/mysql/profile.model.js";
 import AccountCache from "../models/repositories/account/account.cache.js";
 
-const { sign } = pkg
-
 
 const client = Databases.getClientFromMysql("shop")
 
