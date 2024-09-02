@@ -1,15 +1,17 @@
-import * as crypto from "node:crypto";
 import bcrypt from "bcrypt"
 
 import BaseService from "./base.service.js";
 import AccountRepository from "../models/repositories/account/account.repository.js";
 import {BadRequestException, NotFoundException} from "../core/error.response.js";
 import AccountService from "./account.service.js";
-import OTPRepository from "../models/repositories/otp/otp.repository.js";
 import KeyTokenService from "./keyToken.service.js";
 import AuthService from "./auth.service.js";
 import KeyTokenCache from "../models/repositories/keyToken/keyToken.cache.js";
 import KeyTokenRepository from "../models/repositories/keyToken/keyToken.repository.js";
+import OtpService from "./otp.service.js";
+import RedisMessageService from "./pubsub.service.js";
+import EmailService from "./email.service.js";
+import sleep from "../helpers/sleep.js";
 
 
 export default new class AccessService extends BaseService {
@@ -40,63 +42,38 @@ export default new class AccessService extends BaseService {
             email, password
         })
 
-        const OTP = crypto.randomBytes(16).toString("hex")
-
-        await OTPRepository.createOTP({
-            otp_token: OTP,
-            otp_email: email
-        })
-
-        /*EmailService.sendMail({
+       /* EmailService.sendMail({
             to: "sample@gmail.com",
             otp: OTP
-        })*/
+        })
+        */
+        return await OtpService.createOTP({email})
 
-        return createdAccount
     }
     async verify({ otp }) {
-        if (!otp)
-            throw new NotFoundException("OTP not found")
+        const email = await OtpService.verify({otp})
 
-        const OTPModel = await OTPRepository.findOTP({
-            otp_token: otp
+        await this.validateAccount({email}, AccountModel => {
+            AccountRepository.setActivateAccount({Model: AccountModel})
         })
-
-        if (!OTPModel)
-            throw NotFoundException("OTP not found, verify again")
-
-        const AccountModel = await AccountRepository.findByEmail({
-            email: OTPModel.otp_email
-        })
-
-        if (!AccountModel)
-            throw new NotFoundException("Account not found, please try again")
-
-        AccountRepository.setActivatedAccount({Model: AccountModel})
-
-        await OTPRepository.deleteOTP({otp_token: otp})
 
         return "Success"
     }
     async login({ email, password, res }) {
-        const Auth = new AuthService(res)
-
         if (!email) throw new NotFoundException("Email not found")
 
         if (!password) throw new NotFoundException("Password not found")
 
-        const foundAccount = await AccountRepository.findByEmail({email, raw: true})
+        const AccountModel = await this.validateAccount({email}, AccountModel => {return AccountModel})
 
-        if (!foundAccount) throw new NotFoundException("Account not found")
-
-        const isPasswordMatched = await bcrypt.compare(password, foundAccount.password)
+        const isPasswordMatched = await bcrypt.compare(password, AccountModel.password)
         if (!isPasswordMatched)
             throw new BadRequestException("Password doesnt match")
 
         const { public_key, private_key } = KeyTokenService.createPubPriKey()
         const keyTokenResponse = KeyTokenService.createAccessRefreshToken({
             payload: {
-                account_id: foundAccount.account_id
+                account_id: AccountModel.account_id
             },
             public_key,
             private_key
@@ -104,40 +81,72 @@ export default new class AccessService extends BaseService {
 
 
         KeyTokenCache.set({
-            key: foundAccount.account_id,
+            key: AccountModel.account_id,
             value: keyTokenResponse
         })
 
-        KeyTokenRepository.createKeyToken({
-            account_id: foundAccount.account_id,
+        await KeyTokenRepository.createKeyToken({
+            account_id: AccountModel.account_id,
             public_key,
             private_key,
             refresh_token: keyTokenResponse.refresh_token,
         })
 
-        Auth.setCookie(AuthService.KEYS.CLIENT, foundAccount.account_id)
-        Auth.setCookie(AuthService.KEYS.ACCESS, keyTokenResponse.access_token)
-        Auth.setCookie(AuthService.KEYS.REFRESH, keyTokenResponse.refresh_token)
+        const { CLIENT, ACCESS, REFRESH } = AuthService.getKeys()
+        AuthService.setRes(res)
+            .setCookie(CLIENT, AccountModel.account_id)
+            .setCookie(ACCESS, keyTokenResponse.access_token)
+            .setCookie(REFRESH, keyTokenResponse.refresh_token)
 
         return keyTokenResponse
     }
     async logout({ cookies, res }) {
-        const Auth = new AuthService(res)
-
+        const clientId = cookies[AuthService.KEYS.CLIENT]
         KeyTokenService.clearToken({
-            account_id: cookies[AuthService.KEYS.CLIENT]
+            account_id: clientId
         })
-
-        Auth.clearCookie()
+        AuthService
+            .setRes(res)
+            .setReqCookies(cookies)
+            .clearCookie()
     }
-    async close() {}
-    async refresh({ user, cookies, res }) {
-        const Auth = new AuthService(res)
+    async forgotPassword({ email }) {
+        await this.validateAccount({email})
 
-        const old_refresh_token = cookies[AuthService.KEYS.REFRESH]
+        /*EmailService.sendMail({
+            to: "sample@gmail.com",
+            otp: OTP
+        })*/
+
+
+        return await OtpService.createOTP({email})
+    }
+    async resetPassword({ token: otp, update }) {
+        const {password, confirmPassword} = update
+        if (!password)
+            throw new NotFoundException("Password not found")
+
+        if (!confirmPassword)
+            throw new NotFoundException("Confirm password not found")
+
+        if (password !== confirmPassword)
+            throw new BadRequestException("Confirm password not match")
+
+        const email = await OtpService.verify({otp})
+        const AccountModel = await AccountRepository.findByEmail({email})
+
+        const hashedPassword = await bcrypt.hash(password, 10)
+
+        return AccountRepository.updateAccount({
+            Model: AccountModel,
+            update: {password: hashedPassword}
+        })
+    }
+    async refresh({ user, cookies, res }) {
         const {
             account_id
         } = user
+        const old_refresh_token = cookies[AuthService.KEYS.REFRESH]
 
         const {
             public_key,
@@ -152,8 +161,6 @@ export default new class AccessService extends BaseService {
             private_key
         })
 
-        console.log(keyTokenResponse)
-
         KeyTokenCache.set({
             key: account_id,
             value: keyTokenResponse
@@ -167,9 +174,20 @@ export default new class AccessService extends BaseService {
             private_key
         })
 
-        Auth.setCookie(AuthService.KEYS.ACCESS, keyTokenResponse.access_token)
-        Auth.setCookie(AuthService.KEYS.REFRESH, keyTokenResponse.refresh_token)
+        AuthService.setRes(res)
+            .setCookie(AuthService.KEYS.ACCESS, keyTokenResponse.access_token)
+            .setCookie(AuthService.KEYS.REFRESH, keyTokenResponse.refresh_token)
 
         return returned
+    }
+    async validateAccount(field, callback) {
+        const AccountModel = await AccountRepository.findByFieldTest({
+            field
+        })
+
+        if (!AccountModel)
+            throw new NotFoundException("Account not found")
+
+        return callback?.(AccountModel)
     }
 }

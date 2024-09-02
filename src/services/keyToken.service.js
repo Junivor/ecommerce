@@ -4,11 +4,20 @@ import pkg from "jsonwebtoken"
 import BaseService from "./base.service.js";
 import KeyTokenRepository from "../models/repositories/keyToken/keyToken.repository.js";
 import KeyTokenCache from "../models/repositories/keyToken/keyToken.cache.js";
+import RedisMessageService from "./pubsub.service.js";
+
 
 const { sign, verify } = pkg
 export default new class KeyTokenService extends BaseService {
     constructor() {
         super()
+
+        RedisMessageService.subscribe("clear-key-token", (channel, message) => {
+            if (channel === 'clear-key-token') {
+                const { account_id } = JSON.parse(message)
+                this.clearToken({account_id})
+            }
+        })
     }
 
     createPubPriKey(size = 16, encoding = "hex") {
@@ -44,6 +53,8 @@ export default new class KeyTokenService extends BaseService {
         return verify(token, key)
     }
     clearToken({account_id}) {
+
+
         KeyTokenRepository.clearKeyToken({account_id})
         KeyTokenCache.del({key: account_id})
     }

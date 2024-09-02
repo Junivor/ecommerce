@@ -24,6 +24,8 @@ export default class Ioredis extends Init {
             CONNECT_STATUS: {...Ioredis.CONNECT_STATUS},
             TRACKING_MODE
         })
+        this.publisher = this.initPublisher("redis_publisher")
+        this.subscriber = this.initSubscriber("redis_subscriber")
     }
 
     setClient(clientName, client) {
@@ -48,6 +50,12 @@ export default class Ioredis extends Init {
     getClientsName() {
         return super.getClientsName();
     }
+    getPublisher() {
+        return this.publisher
+    }
+    getSubscriber() {
+        return this.subscriber
+    }
 
     connect(clientName = "", uri) {
         const lowerCaseName = super.connect(clientName, uri)
@@ -59,6 +67,29 @@ export default class Ioredis extends Init {
         this.handleEventConnect(lowerCaseName, client)
         return this
     }
+    initPublisher(pubName = "") {
+        const clientName = pubName.toLowerCase()
+        const publisher = new Redis()
+
+        this.validator.setString(clientName).setObject(publisher)
+        this.setClient(clientName, publisher)
+        this.setRetryClient(clientName)
+        this.handleEventConnect(clientName, publisher)
+
+        return publisher
+    }
+    initSubscriber(subName = "") {
+        const clientName = subName.toLowerCase()
+        const subscriber = new Redis()
+
+        this.validator.setString(clientName).setObject(subscriber)
+        this.setClient(clientName, subscriber)
+        this.setRetryClient(clientName)
+        this.handleEventConnect(clientName, subscriber)
+
+        return subscriber
+    }
+
     connectAll() {
         super.connectAll()
         return this
@@ -84,7 +115,5 @@ export default class Ioredis extends Init {
 
 }
 
-Ioredis.registerURI("redis_zero", `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/${process.env.REDIS_DB_ZERO}`)
-Ioredis.registerURI("redis_one", `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/${process.env.REDIS_DB_ONE}`)
-Ioredis.registerURI("redis2_one", `redis://${process.env.REDIS_HOST}:6380/${process.env.REDIS_DB_ONE}`)
+Ioredis.registerURI("redis_other", `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`)
 

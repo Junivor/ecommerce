@@ -16,18 +16,23 @@ export default class AccountRepository extends Account {
 
         return UpdatedModel.save()
     }
-    static setActivatedAccount({ Model }) {
+    static setActivateAccount({ Model }) {
         this.updateAccount({
             Model, update: {
                 activated: true
             }
         })
     }
-    static findByField({fieldName, fieldValue, include = null, raw = false}) {
+    static findByFieldTest({field, include = null, raw = false}) {
         return this.findOne({
-            where: {
-                [fieldName]: fieldValue
-            },
+            where: {...field},
+            include,
+            raw
+        })
+    }
+    static findByField({field, include = null, raw = false}) {
+        return this.findOne({
+            where: {...field},
             include,
             raw
         })

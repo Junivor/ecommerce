@@ -8,6 +8,7 @@ import ProfileService from "./profile.service.js";
 
 import Profile from "../models/mysql/profile.model.js";
 import AccountCache from "../models/repositories/account/account.cache.js";
+import AuthService from "./auth.service.js";
 
 
 const client = Databases.getClientFromMysql("shop")
@@ -40,29 +41,31 @@ export default new class AccountService extends BaseService {
 
         return foundAccount
     }
-    async getMe({ account_id }) {
-        const accountCache = await AccountCache.get({key: account_id})
+    async getMe({ cookies }) {
+        const clientId = cookies[AuthService.KEYS.CLIENT]
+        const accountCache = await AccountCache.get({key: clientId})
 
         if (accountCache) return accountCache
 
-        const foundAccount = await AccountRepository.findById({account_id})
-        if (!foundAccount) {
+        const AccountModel = await AccountRepository.findById({account_id: clientId})
+
+
+        if (!AccountModel) {
             AccountCache.set({
-                key: account_id,
+                key: clientId,
                 value: null
             })
             throw new NotFoundException("Account not found!")
         }
 
         AccountCache.set({
-            key: account_id,
-            value: foundAccount
+            key: clientId,
+            value: AccountModel
         })
 
-        return foundAccount
+        return AccountModel
     }
     async createAccount({ email, password }) {
-
         const hashedPassword = await bcrypt.hash(password, 10)
 
         const payload = await client.transaction(async transaction => {
@@ -99,72 +102,45 @@ export default new class AccountService extends BaseService {
 
         return payload
     }
-    async deleteAccount(request) {
-        const accountModel = await this.validateAccount({
-            request,
-            findField: "username",
-            callback: data => {return data}
-        })
+    async deleteAccount({ username }) {
+        const AccountModel = await this.validateAccount({username}, AccountModel => {return AccountModel})
 
 
         await client.transaction(async transaction => {
             await ProfileService.deleteMultipleProfile({
-                account_id: accountModel.account_id,
+                account_id: AccountModel.account_id,
                 transaction
             })
 
 
             await AccountRepository.deleteAccount({
-                Model: accountModel,
+                Model: AccountModel,
                 transaction
             })
         })
 
         AccountCache.del({
-            key: accountModel.account_id,
+            key: AccountModel.account_id,
         })
 
         return "Success"
     }
-    async updateAccount(request) {
-        const accountModel = await this.validateAccount({
-            request: {
-                email: request.email
-            },
-            callback: data => {return data}
-        })
+    async updateAccount({ email, update }) {
+        const AccountModel = await this.validateAccount(email, AccountModel => {return AccountModel})
 
-        const { account } = request.update
+        const { account } = update
 
         return await AccountRepository.updateAccount({
-            Model: accountModel,
+            Model: AccountModel,
             update: account
         })
     }
-    async validateAccount({ request, findField = "email", callback = null } = {}) {
-        const fieldValue = request[findField]
-        const foundAccount = await AccountRepository.findByField({
-            fieldName: findField,
-            fieldValue
-        })
-
+    async validateAccount(field, callback) {
+        const foundAccount = await AccountRepository.findByField({field})
 
         if (!foundAccount)
             throw new NotFoundException("Not found account")
 
         return callback?.(foundAccount)
-    }
-    async validateDuplicate({ request, findField = "email", callback = null } = {}) {
-        const fieldValue = request[findField]
-        const foundAccount = await AccountRepository.findByField({
-            fieldName: findField,
-            fieldValue
-        })
-
-        if (foundAccount)
-            throw new BadRequestException("Duplicate email")
-
-        return callback?.(foundAccount)
-
     }
 }

@@ -11,6 +11,9 @@ accessRoute.post("/register", catchAsync(AccessController.register))
 accessRoute.post("/verify/:otp", catchAsync(AccessController.verify))
 accessRoute.post("/login", catchAsync(AccessController.login))
 
+accessRoute.post("/forgot-password", catchAsync(AccessController.forgotPassword))
+accessRoute.post("/reset-password", catchAsync(AccessController.resetPassword))
+
 accessRoute.use(catchAsync(AuthService.checkAuth))
 
 accessRoute.post("/logout", catchAsync(AccessController.logout))

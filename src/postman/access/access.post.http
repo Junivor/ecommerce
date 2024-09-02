@@ -9,7 +9,20 @@ Content-Type: application/json
 }
 
 ### POST: Verify account
-POST http://localhost:3030/api/v1/auth/verify/b443e09846575144f808f480ad6cd419
+POST http://localhost:3030/api/v1/auth/verify/cba20aa1339efa29389cb98df8fa23f0
+Content-Type: application/json
+
+
+### POST: RESET PASSWORD
+POST http://localhost:3030/api/v1/auth/reset-password?token=a3a1780a0929e5d77cb0743e32bb259d
+Content-Type: application/json
+
+{
+  "update": {
+    "password": "67890",
+    "confirmPassword": "67890 "
+  }
+}
 
 ### POST: LOG IN
 POST http://localhost:3030/api/v1/auth/login
@@ -22,6 +35,14 @@ Content-Type: application/json
 
 ### POST: LOG OUT
 POST http://localhost:3030/api/v1/auth/logout
+
+### POST: FORGOT PASSWORD
+POST http://localhost:3030/api/v1/auth/forgot-password
+Content-Type: application/json
+
+{
+  "email": "aws.koi04@gmail.com"
+}
 
 ### POST: REFRESH
 POST http://localhost:3030/api/v1/auth/refresh

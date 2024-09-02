@@ -2,62 +2,87 @@ import BaseService from "./base.service.js";
 import {BadRequestException} from "../core/error.response.js";
 import KeyTokenCache from "../models/repositories/keyToken/keyToken.cache.js";
 import KeyTokenService from "./keyToken.service.js";
+import KeyTokenRepository from "../models/repositories/keyToken/keyToken.repository.js";
+import AccessService from "./access.service.js";
+import RedisMessageService from "./pubsub.service.js"
 
-export default class AuthService extends BaseService {
+export default new class AuthService extends BaseService {
     static KEYS = {
         ACCESS: "authorization",
         REFRESH: "x-rtoken-id",
         CLIENT: "x-client-id"
     }
-    constructor(res) {
+
+    constructor() {
         super()
-        this.res = res
-        this.cookieKeys = []
+        this.res = {}
+        this.cookies = {}
+        this.KEYS = {
+            ACCESS: "authorization",
+            REFRESH: "x-rtoken-id",
+            CLIENT: "x-client-id"
+        }
+        RedisMessageService.subscribe("clear-cookie-site", (channel, message) => {
+            if (channel === 'clear-cookie-site') {
+                console.log(`Clearing cookies from ${message}`)
+                this.clearCookie()
+            }
+        })
     }
 
+    getKeys() {
+        return this.KEYS
+    }
+
+    setRes(res) {
+        this.res = res
+        return this
+    }
+    setReqCookies(cookies) {
+        this.cookies = cookies
+        return this
+    }
     setCookie(key, value) {
-        this.cookieKeys.push(key)
         this.res.cookie(key, value)
         return this
     }
 
-
     delCookie(key) {
-        this.clearCookie(key)
-        this.cookieKeys.filter(cookieKeys => cookieKeys !== key)
+        this.res.clearCookie(key)
         return this
     }
 
-    clearCookie() {
-        this.cookieKeys.forEach(this.res.clearCookie)
-        this.cookieKeys = []
-        return this
+    clearCookie(res) {
+        const keys = Object.keys(res ? res : this.cookies)
+        keys.forEach(key => this.res.clearCookie(key))
     }
 
-    static async checkAuth(req, res, next) {
+
+    async checkAuth(req, res, next) {
         const accessToken = req.cookies[AuthService.KEYS.ACCESS]
         const refreshToken = req.cookies[AuthService.KEYS.REFRESH]
         const clientId = req.cookies[AuthService.KEYS.CLIENT]
 
+        console.log("refreshToken:::::", refreshToken)
         // If one of these three empty
         if (!accessToken || !refreshToken || !clientId)
             throw new BadRequestException("Please log in again! [1]")
 
         const tokens = await KeyTokenCache.get({key: clientId})
+        const {refresh_token_used} = await KeyTokenRepository.findByAccountId({
+            account_id: clientId,
+            attributes: ['refresh_token_used'],
+            raw: true
+        })
 
-
+        // If token in cache is empty
         if (!tokens || !tokens.data) {
             throw new BadRequestException("Please log in again! [2]")
         }
 
         const {access_token, refresh_token} = tokens.data
 
-        console.log({
-            access_token,
-            accessToken
-        })
-
-        // If there is no access token in redis cache
+        // If there is no access token or refresh token in redis cache
         if (!accessToken || !refreshToken)
             throw new BadRequestException("Something went wrong, please try again! [1]")
 
@@ -68,6 +93,23 @@ export default class AuthService extends BaseService {
         // If refresh token in redis don't match with refresh token in cookie
         if (refreshToken !== refresh_token)
             throw new BadRequestException("Something went wrong, please try again! [3]")
+
+
+        if (refresh_token_used.includes("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiMWUyZDdkNmMtYzNkOC00MGMwLTgwZDUtMzUxNGJmMWQ0ZjM0IiwiaWF0IjoxNzI1MjcxMDg4LCJleHAiOjE3MjU3MDMwODh9.0_w-UZHtQWjOQfz0R46nhsFseoB-CUcBVjh40f0Wew4")) {
+            RedisMessageService
+                .publish("clear-key-token", {
+                    account_id: clientId
+                })
+                .publish('send-auth-alert', {
+                    account_id: clientId
+                })
+                .publish('clear-cookie-site', {
+                    account_id: clientId
+                })
+
+            throw new BadRequestException("Something went wrong, please try again! [4]")
+        }
+
 
         const {public_key} = await KeyTokenService.findPublicKey({
             account_id: clientId

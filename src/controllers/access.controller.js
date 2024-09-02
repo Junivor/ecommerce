@@ -2,7 +2,6 @@ import {OKResponse} from "../core/success.response.js";
 import AccessService from "../services/access.service.js";
 
 export default class AccessController {
-    static serviceName = "Access"
 
     static async register(req, res, next) {
         new OKResponse({
@@ -17,7 +16,7 @@ export default class AccessController {
         }).send(res)
     }
     static async login(req, res, next) {
-            new OKResponse({
+        new OKResponse({
             service: "Access",
             metadata: await AccessService.login({
                 ...req.body,
@@ -29,6 +28,21 @@ export default class AccessController {
         new OKResponse({
             service: "Access",
             metadata: await AccessService.logout({...req, res})
+        }).send(res)
+    }
+    static async forgotPassword(req, res, next) {
+        new OKResponse({
+            service: "Access",
+            metadata: await AccessService.forgotPassword(req.body)
+        }).send(res)
+    }
+    static async resetPassword(req, res, next) {
+        new OKResponse({
+            service: "Access",
+            metadata: await  AccessService.resetPassword({
+                ...req.query,
+                ...req.body
+            })
         }).send(res)
     }
     static async close(req, res, next) {}

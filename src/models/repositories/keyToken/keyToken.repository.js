@@ -30,6 +30,13 @@ export default class KeyTokenRepository extends KeyToken {
                 where: {account_id}
             })
         }
+        static findByAccountId({ account_id, attributes = ['*'], raw = false }) {
+            return this.findOne({
+                where: {account_id},
+                attributes,
+                raw
+            })
+        }
         static findPublicKey({ account_id }) {
             return this.findOne({
                 where: {account_id},

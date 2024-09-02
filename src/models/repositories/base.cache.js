@@ -8,7 +8,7 @@ export default class BaseCache extends Ioredis {
         this.PREFIX_KEY = PREFIX_KEY.toUpperCase()
         this.EXPIRE_TIME = EXPIRE_TIME * RAND_NUMBER
         this.TIME_FORMAT = TIME_FORMAT.toUpperCase()
-        this.client = this.getClient("redis_zero")
+        this.client = this.getClient("redis_other")
         this.KEY_STATUS = {
             EXIT: 1,
             NOT_EXIT: 0,

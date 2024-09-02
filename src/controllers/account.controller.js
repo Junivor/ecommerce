@@ -30,7 +30,9 @@ export default class AccountController {
     static async getMe(req, res, next) {
         new OKResponse({
             service: AccountController.service,
-            metadata: await AccountService.getMe(req.session)
+            metadata: await AccountService.getMe({
+                cookies: req.cookies
+            })
         }).send(res)
     }
 

@@ -1,4 +1,5 @@
 import {createTransport} from "nodemailer"
+import RedisMessageService from "./pubsub.service.js";
 
 export default new class EmailService {
     constructor() {
@@ -10,6 +11,14 @@ export default new class EmailService {
                 pass: process.env.AWS_SMTP_PASS
             }
         })
+
+        RedisMessageService.subscribe("send-auth-alert", (channel, message) => {
+            if (channel === "send-auth-alert") {
+                this.sendMail({to: JSON.parse(message)})
+            }
+        })
+
+
     }
 
     getTransporter() {
@@ -17,7 +26,8 @@ export default new class EmailService {
     }
 
     sendMail({ to, subject, otp }) {
-        const transporter = this.getTransporter()
+        console.log("imagine that this is real email...", to)
+        /*const transporter = this.getTransporter()
 
         transporter.sendMail({
             from: '<sample@gmail.com>',
@@ -29,6 +39,6 @@ export default new class EmailService {
             `,
         })
 
-        return "Sent success"
+        return "Sent success"*/
     }
 }
