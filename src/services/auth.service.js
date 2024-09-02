@@ -3,7 +3,6 @@ import {BadRequestException} from "../core/error.response.js";
 import KeyTokenCache from "../models/repositories/keyToken/keyToken.cache.js";
 import KeyTokenService from "./keyToken.service.js";
 import KeyTokenRepository from "../models/repositories/keyToken/keyToken.repository.js";
-import AccessService from "./access.service.js";
 import RedisMessageService from "./pubsub.service.js"
 
 export default new class AuthService extends BaseService {

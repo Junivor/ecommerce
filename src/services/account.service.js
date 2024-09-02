@@ -1,5 +1,4 @@
 import * as bcrypt from "bcrypt"
-import pkg from "jsonwebtoken"
 import AccountRepository from "../models/repositories/account/account.repository.js";
 import {BadRequestException, NotFoundException} from "../core/error.response.js";
 import Databases from "../dbs/init.databases.js";
