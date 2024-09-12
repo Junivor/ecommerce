@@ -10,11 +10,23 @@ import KeyTokenCache from "../models/repositories/keyToken/keyToken.cache.js";
 import KeyTokenRepository from "../models/repositories/keyToken/keyToken.repository.js";
 import OtpService from "./otp.service.js";
 import EmailService from "./email.service.js";
+import BrokerService from "./broker.service.js";
+import Databases from "../dbs/init.databases.js";
+const client = Databases.getClientFromMysql("shop")
+import { v4 as uuidv4 } from 'uuid';
+import {generateRandomNumber} from "../utils/utils.js";
+import ProfileService from "./profile.service.js";
+import sleep from "../helpers/sleep.js";
 
 
 export default new class AccessService extends BaseService {
     constructor() {
         super()
+
+        BrokerService.createPublisher({
+            exchangeKey: "account",
+            type: "fanout"
+        })
     }
 
     async register({ email, password, confirmPassword }) {
@@ -35,16 +47,23 @@ export default new class AccessService extends BaseService {
         if (foundAccount)
             throw new BadRequestException("Duplicate email")
 
+        const init_account_uuid = uuidv4()
+        const init_account_username = `user-${generateRandomNumber()}`
 
-        const createdAccount = AccountService.createAccount({
-            email, password
+        client.transaction(async transaction => {
+            await AccountService.createAccount({
+                account_id: init_account_uuid,
+                username: init_account_username,
+                email, password, transaction
+            })
+
+            await ProfileService.createProfile({
+                account_id: init_account_uuid,
+                profile_alias: init_account_username,
+                transaction
+            })
         })
 
-       /* EmailService.sendMail({
-            to: "sample@gmail.com",
-            otp: OTP
-        })
-        */
         return await OtpService.createOTP({email})
 
     }

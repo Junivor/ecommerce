@@ -3,9 +3,15 @@ import ProfileRepository from "../models/repositories/profile/profile.repository
 import {BadRequestException, NotFoundException} from "../core/error.response.js";
 import ProfileCache from "../models/repositories/profile/profile.cache.js";
 import AccountCache from "../models/repositories/account/account.cache.js";
+import BrokerService from "./broker.service.js";
+import {log} from "debug";
 
 
 export default new class ProfileService extends BaseService {
+    constructor() {
+        super();
+    }
+
     async createProfile({account_id, profile_alias, phone_number = "000-000-100", transaction = null}) {
         if (!account_id)
             throw new NotFoundException("Account_id not found")
@@ -24,16 +30,11 @@ export default new class ProfileService extends BaseService {
             account_id, profile_alias, phone_number, transaction
         })
 
+        ProfileCache.set({
+            key: createdProfile.profile_alias,
+            value: createdProfile
+        })
 
-        if (!transaction) {
-            AccountCache.hSet({
-                hKey: createdProfile.account_id,
-                fKey: createdProfile.profile_alias,
-                value: createdProfile
-            })
-        }
-
-        return createdProfile
     }
     async updateProfile({ profile_alias, update }) {
         const profileModel = await this.validateProfile({

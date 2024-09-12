@@ -8,7 +8,7 @@ export default class Databases {
     static databases = {}
     static validator = new DatabaseValidator(Databases.databases)
 
-    static registerDatabase(name = "", database) {
+    static async registerDatabase(name = "", database) {
          const lowerCaseName = this.validator
              .setTitle(`database[${name}]`)
              .isParamEmpty(name, database)
@@ -16,7 +16,7 @@ export default class Databases {
              .isDuplicate()
              .getLowerCaseString()
 
-        this.databases[lowerCaseName] = database
+        this.databases[lowerCaseName] = await new database
     }
 
     static getDatabase(databaseName = "") {
@@ -27,7 +27,7 @@ export default class Databases {
             .isExist()
             .getLowerCaseString()
 
-        return new Databases.databases[lowerCaseName]
+        return Databases.databases[lowerCaseName]
     }
 
     static getClientFromMongo(clientName = "") {
@@ -42,6 +42,10 @@ export default class Databases {
         return this.getDatabase("mysql").getClient(clientName)
     }
 
+    static getClientFromRabbitMQ(clientName = "") {
+        return this.getDatabase("rabbitmq").getClient(clientName)
+    }
+
     static printDatabasesStatus() {
         Object.keys(this.databases).forEach(
             name => Databases.databases[name].printClientStatusTable()
@@ -49,13 +53,14 @@ export default class Databases {
     }
 }
 
+await Databases.registerDatabase("mongo", InitMongo)
+await Databases.registerDatabase("mysql", InitMysql)
+await Databases.registerDatabase("redis", InitIoredis)
+await Databases.registerDatabase("rabbitmq", InitRabbit)
 
 
 
 
 
-Databases.registerDatabase("mongo", InitMongo)
-Databases.registerDatabase("mysql", InitMysql)
-Databases.registerDatabase("redis", InitIoredis)
 
 

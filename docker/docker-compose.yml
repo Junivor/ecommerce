@@ -5,7 +5,7 @@ services:
     container_name: mdb
     restart: unless-stopped
     ports:
-      - 27018:27017
+      - "27018:27017"
     volumes:
       - .docker/data/mongodb:/data/db
 
@@ -13,7 +13,32 @@ services:
     image: redis:latest
     container_name: rdb
     ports:
-      - 6379:6379
+      - "6379:6379"
     volumes:
       - .docker/data/redis:/data
     restart: unless-stopped
+
+  mysql_master:
+    image: mysql:8.0
+    container_name: msql-master
+    environment:
+      MYSQL_ROOT_PASSWORD: master
+      MYSQL_DATABASE: shop
+      MYSQL_PASSWORD: master
+    ports:
+      - "8811:3306"
+    volumes:
+      - .docker/data/mysql_data:/var/lib/mysql
+
+
+  mysql_slave:
+    image: mysql:8.0
+    container_name: msql-slave
+    environment:
+      MYSQL_ROOT_PASSWORD: slave
+      MYSQL_DATABASE: shop
+      MYSQL_PASSWORD: slave
+    ports:
+      - "8822:3306"
+    volumes:
+      - ./mysql_data:/var/lib/mysql

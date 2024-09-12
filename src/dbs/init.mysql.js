@@ -8,7 +8,7 @@ export default class Mysql extends Init {
     static URIs = {}
     static registerURI(type = "", clientName = "", uri) {
         if (!this.URIs[type]) {
-            this.URIs[type] = {}; // Initialize the type if it doesn't exist
+            this.URIs[type] = {}
         }
 
         if (this.URIs[type][clientName]) {

@@ -1,6 +1,4 @@
 import BaseService from "./base.service.js";
-import InitRabbit from "../dbs/init.rabbit.js";
-import Databases from "../dbs/init.databases.js";
 import amqplib from "amqplib";
 
 export default new class BrokerService extends BaseService {

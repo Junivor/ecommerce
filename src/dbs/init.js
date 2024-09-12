@@ -181,7 +181,7 @@ export default class Init {
             .isExist()
             .getLowerCaseString()
     }
-    async retry(clientName, retryTime = 3, delay = 5000, error) {
+    async   retry(clientName, retryTime = 3, delay = 5000, error) {
         const RETRY_PER_SEC = this.getRetryPerMs()
         const isClientRetrying = this.getRetryClientStatus(clientName)
         const isRetry = this.getRetryFlag()

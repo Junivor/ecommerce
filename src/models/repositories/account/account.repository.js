@@ -2,9 +2,9 @@ import {Account} from "../../mysql/association/account_profile.js";
 
 
 export default class AccountRepository extends Account {
-    static createAccount({ email, password,  transaction = null}) {
+    static createAccount({ account_id, username, email, password, transaction = null}) {
         return this.create({
-            email, password
+            account_id, username, email, password
         }, {transaction})
     }
     static updateAccount({Model, update}) {

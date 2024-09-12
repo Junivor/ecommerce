@@ -14,7 +14,7 @@ accessRoute.post("/login", catchAsync(AccessController.login))
 accessRoute.post("/forgot-password", catchAsync(AccessController.forgotPassword))
 accessRoute.post("/reset-password", catchAsync(AccessController.resetPassword))
 
-accessRoute.use(catchAsync(AuthService.checkAuth))
+accessRoute.use(catchAsync(AuthService.checkAuth.bind(AuthService)))
 
 accessRoute.post("/logout", catchAsync(AccessController.logout))
 accessRoute.post("/refresh", catchAsync(AccessController.refresh))

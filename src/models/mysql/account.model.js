@@ -4,14 +4,14 @@ import {generateRandomNumber} from "../../utils/utils.js";
 
 const sequelize = Databases.getClientFromMysql("shop")
 
-
 export default class Account extends Model {}
 
 Account.init({
     account_id: {
         type: DataTypes.UUID,
         primaryKey: true,
-        defaultValue: DataTypes.UUIDV4
+        allowNull: false,
+        unique: true
     },
     email: {
         type: DataTypes.STRING,
@@ -22,7 +22,7 @@ Account.init({
         type: DataTypes.STRING,
         unique: true,
         allowNull: false,
-        defaultValue: `user-${generateRandomNumber()}`
+        // defaultValue: `user-${generateRandomNumber()}`
     },
     password: {
         type: DataTypes.STRING,

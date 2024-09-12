@@ -12,6 +12,10 @@ export default new class ProfileCache extends BaseCache {
     set({key, value, timeFormat, time}) {
         return super.set({key, value, timeFormat, time});
     }
+    hSet({hKey, fKey, value, timeFormat, time}) {
+        super.hSet({hKey, fKey, value, timeFormat, time});
+    }
+
     get({key}) {
         return super.get({key});
     }

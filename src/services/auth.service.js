@@ -3,7 +3,7 @@ import {BadRequestException} from "../core/error.response.js";
 import KeyTokenCache from "../models/repositories/keyToken/keyToken.cache.js";
 import KeyTokenService from "./keyToken.service.js";
 import KeyTokenRepository from "../models/repositories/keyToken/keyToken.repository.js";
-import RedisMessageService from "./pubsub.service.js"
+import BrokerService from "./broker.service.js";
 
 export default new class AuthService extends BaseService {
     static KEYS = {
@@ -21,18 +21,15 @@ export default new class AuthService extends BaseService {
             REFRESH: "x-rtoken-id",
             CLIENT: "x-client-id"
         }
-        RedisMessageService.subscribe("clear-cookie-site", (channel, message) => {
-            if (channel === 'clear-cookie-site') {
-                console.log(`Clearing cookies from ${message}`)
-                this.clearCookie()
-            }
+
+        BrokerService.createPublisher({
+            exchangeKey: "auth",
+            type: "fanout"
         })
     }
-
     getKeys() {
         return this.KEYS
     }
-
     setRes(res) {
         this.res = res
         return this
@@ -45,27 +42,27 @@ export default new class AuthService extends BaseService {
         this.res.cookie(key, value)
         return this
     }
-
     delCookie(key) {
         this.res.clearCookie(key)
         return this
     }
-
-    clearCookie(res) {
-        const keys = Object.keys(res ? res : this.cookies)
+    clearCookie() {
+        const keys = Object.keys(this.cookies)
         keys.forEach(key => this.res.clearCookie(key))
     }
 
 
     async checkAuth(req, res, next) {
+        this.setRes(res).setReqCookies(req.cookies)
+
         const accessToken = req.cookies[AuthService.KEYS.ACCESS]
         const refreshToken = req.cookies[AuthService.KEYS.REFRESH]
         const clientId = req.cookies[AuthService.KEYS.CLIENT]
 
-        console.log("refreshToken:::::", refreshToken)
         // If one of these three empty
-        if (!accessToken || !refreshToken || !clientId)
-            throw new BadRequestException("Please log in again! [1]")
+        if (!accessToken || !refreshToken || !clientId) {
+            throw new BadRequestException("Authentication required. Please log in.")
+        }
 
         const tokens = await KeyTokenCache.get({key: clientId})
         const {refresh_token_used} = await KeyTokenRepository.findByAccountId({
@@ -76,37 +73,35 @@ export default new class AuthService extends BaseService {
 
         // If token in cache is empty
         if (!tokens || !tokens.data) {
-            throw new BadRequestException("Please log in again! [2]")
+            throw new BadRequestException("Session expired. Please log in again.")
         }
 
         const {access_token, refresh_token} = tokens.data
 
+        if (!access_token || !refresh_token) {
+            throw new BadRequestException("Authentication error. Please try logging in again.")
+        }
+
         // If there is no access token or refresh token in redis cache
         if (!accessToken || !refreshToken)
-            throw new BadRequestException("Something went wrong, please try again! [1]")
+            throw new BadRequestException("Session mismatch detected. please try again! [1]")
 
-        // If access token in redis don't match with access token in cookie
-        if (accessToken !== access_token)
+        // If access and refresh token in redis don't match with access and refresh token in cookie
+        if (accessToken !== access_token || refreshToken !== refresh_token)
             throw new BadRequestException("Something went wrong, please try again! [2]")
 
-        // If refresh token in redis don't match with refresh token in cookie
-        if (refreshToken !== refresh_token)
-            throw new BadRequestException("Something went wrong, please try again! [3]")
 
 
-        if (refresh_token_used.includes("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2NvdW50X2lkIjoiMWUyZDdkNmMtYzNkOC00MGMwLTgwZDUtMzUxNGJmMWQ0ZjM0IiwiaWF0IjoxNzI1MjcxMDg4LCJleHAiOjE3MjU3MDMwODh9.0_w-UZHtQWjOQfz0R46nhsFseoB-CUcBVjh40f0Wew4")) {
-            RedisMessageService
-                .publish("clear-key-token", {
-                    account_id: clientId
-                })
-                .publish('send-auth-alert', {
-                    account_id: clientId
-                })
-                .publish('clear-cookie-site', {
-                    account_id: clientId
-                })
 
-            throw new BadRequestException("Something went wrong, please try again! [4]")
+        if (refresh_token_used.includes(refresh_token)) {
+            await BrokerService.sendMessage({
+                exchangeKey: "auth",
+                message: {
+                    account_id: clientId
+                }
+            })
+            this.clearCookie()
+            throw new BadRequestException("Potential security issue detected. Please try again!")
         }
 
 

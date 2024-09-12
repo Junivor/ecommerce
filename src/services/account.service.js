@@ -64,48 +64,60 @@ export default new class AccountService extends BaseService {
 
         return AccountModel
     }
-    async createAccount({ email, password }) {
+    async createAccount({  account_id, username, email, password, transaction }) {
         const hashedPassword = await bcrypt.hash(password, 10)
 
-        const payload = await client.transaction(async transaction => {
-            try {
-                const createdAccount = await AccountRepository.createAccount({
-                    email,
-                    password: hashedPassword,
-                    transaction
-                })
-
-                const createdProfile = await ProfileService.createProfile({
-                    account_id: createdAccount.account_id,
-                    profile_alias: createdAccount.username,
-                    transaction
-                })
-
-
-                return {
-                    account_id: createdAccount.account_id,
-                    profile_alias: createdProfile.profile_alias,
-                    value: createdAccount
-                }
-            } catch(error) {
-                throw new BadRequestException(error, this.constructor.name)
-            }
+        const createdAccount = await AccountRepository.createAccount({
+            email,
+            account_id,
+            username,
+            password: hashedPassword,
+            transaction
         })
 
 
-        AccountCache.hSet({
-            hKey: payload.account_id,
-            fKey: payload.profile_alias,
-            value: payload.value
+        AccountCache.set({
+            key: createdAccount.account_id,
+            value: createdAccount
         })
 
-        return payload
+
+
+        // const payload = await client.transaction(async transaction => {
+        //     try {
+        //         const createdAccount = await AccountRepository.createAccount({
+        //             email,
+        //             password: hashedPassword,
+        //             transaction
+        //         })
+        //
+        //         const createdProfile = await ProfileService.createProfile({
+        //             account_id: createdAccount.account_id,
+        //             profile_alias: createdAccount.username,
+        //             transaction
+        //         })
+        //
+        //
+        //         return {
+        //             account_id: createdAccount.account_id,
+        //             profile_alias: createdProfile.profile_alias,
+        //             value: createdAccount
+        //         }
+        //     } catch(error) {
+        //         throw new BadRequestException(error, this.constructor.name)
+        //     }
+        // })
+
+
+        /*
+
+        return payload*/
     }
     async deleteAccount({ username }) {
         const AccountModel = await this.validateAccount({username}, AccountModel => {return AccountModel})
 
 
-        await client.transaction(async transaction => {
+        client.transaction(async transaction => {
             await ProfileService.deleteMultipleProfile({
                 account_id: AccountModel.account_id,
                 transaction
