@@ -1,5 +1,6 @@
 import {createTransport} from "nodemailer"
-import RedisMessageService from "./pubsub.service.js";
+import BrokerService from "./broker.service.js";
+
 
 export default new class EmailService {
     constructor() {
@@ -12,13 +13,16 @@ export default new class EmailService {
             }
         })
 
-        RedisMessageService.subscribe("send-auth-alert", (channel, message) => {
-            if (channel === "send-auth-alert") {
-                this.sendMail({to: JSON.parse(message)})
-            }
+        BrokerService.createConsumer({
+            key: {
+                exchange: "auth",
+                queue: "email"
+            },
+            type: "fanout",
+            callback: msg => this.sendMail({
+                to: msg
+            })
         })
-
-
     }
 
     getTransporter() {
